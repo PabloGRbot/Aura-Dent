@@ -21,4 +21,6 @@ export interface CitaRepository {
     usuarioId: string | null,
     motivo: string | null,
   ): Promise<void>;
+  obtenerDetalleNotificacion(citaId: string): Promise<any | null>;
+  listarConfirmadasPorFecha(fecha: string): Promise<any[]>;
 }

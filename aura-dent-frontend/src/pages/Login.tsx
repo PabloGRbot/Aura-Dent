@@ -1,6 +1,7 @@
 import { useState, FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
+import { ChatWidget } from "../components/ChatWidget";
 
 export const Login = () => {
   const { login } = useAuth();
@@ -107,6 +108,7 @@ export const Login = () => {
           </ul>
         </div>
       </form>
+      <ChatWidget />
     </div>
   );
 };

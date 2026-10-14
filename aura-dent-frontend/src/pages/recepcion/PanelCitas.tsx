@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { citasApi } from "../../api/citasApi";
+import { etiquetaEstadoCita } from "../../utils/estados";
 import type { Cita } from "../../types";
 
 export const PanelCitas = () => {
@@ -63,7 +64,7 @@ export const PanelCitas = () => {
                   {c.horaInicio}
                 </td>
                 <td className="p-3 text-slate-600 dark:text-slate-300">
-                  {c.estadoId}
+                  {etiquetaEstadoCita(c.estadoId)}
                 </td>
               </tr>
             ))}

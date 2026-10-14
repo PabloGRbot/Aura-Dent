@@ -5,6 +5,12 @@ import { CitaRepository } from "../../../domain/ports/CitaRepository";
 export class PostgresCitaRepository implements CitaRepository {
   constructor(private pool: Pool) {}
 
+  /** Normaliza una fecha (Date o string ISO) a 'YYYY-MM-DD' sin desfase de zona. */
+  private aFechaISO(fecha: Date | string): string {
+    if (typeof fecha === "string") return fecha.slice(0, 10);
+    return fecha.toISOString().slice(0, 10);
+  }
+
   async crear(c: Cita): Promise<Cita> {
     const query = `
       INSERT INTO citas
@@ -18,7 +24,7 @@ export class PostgresCitaRepository implements CitaRepository {
       c.pacienteId,
       c.odontologoId,
       c.servicioId,
-      c.fecha,
+      this.aFechaISO(c.fecha),
       c.horaInicio,
       c.horaFin,
       c.estadoId,
@@ -59,9 +65,9 @@ export class PostgresCitaRepository implements CitaRepository {
   ): Promise<Cita[]> {
     const { rows } = await this.pool.query(
       `SELECT * FROM citas
-       WHERE odontologo_id = $1 AND fecha = $2
+       WHERE odontologo_id = $1 AND fecha = $2::date
        ORDER BY hora_inicio`,
-      [odontologoId, fecha],
+      [odontologoId, this.aFechaISO(fecha)],
     );
     return rows.map((r) => this.map(r));
   }
@@ -76,10 +82,17 @@ export class PostgresCitaRepository implements CitaRepository {
   async actualizar(c: Cita): Promise<Cita> {
     await this.pool.query(
       `UPDATE citas
-       SET estado_id=$1, fecha=$2, hora_inicio=$3, hora_fin=$4,
+       SET estado_id=$1, fecha=$2::date, hora_inicio=$3, hora_fin=$4,
            fecha_expiracion=$5, updated_at=NOW()
        WHERE id=$6`,
-      [c.estadoId, c.fecha, c.horaInicio, c.horaFin, c.fechaExpiracion, c.id],
+      [
+        c.estadoId,
+        this.aFechaISO(c.fecha),
+        c.horaInicio,
+        c.horaFin,
+        c.fechaExpiracion,
+        c.id,
+      ],
     );
     return c;
   }
@@ -93,10 +106,10 @@ export class PostgresCitaRepository implements CitaRepository {
     const { rows } = await this.pool.query(
       `SELECT * FROM citas
        WHERE odontologo_id = $1
-         AND fecha = $2
+         AND fecha = $2::date
          AND estado_id IN (2, 3, 6)
          AND (hora_inicio < $4 AND hora_fin > $3)`,
-      [odontologoId, fecha, horaInicio, horaFin],
+      [odontologoId, this.aFechaISO(fecha), horaInicio, horaFin],
     );
     return rows[0] ? this.map(rows[0]) : null;
   }
@@ -114,6 +127,51 @@ export class PostgresCitaRepository implements CitaRepository {
        VALUES ($1,$2,$3,$4,$5)`,
       [citaId, estadoAnterior, estadoNuevo, usuarioId, motivo],
     );
+  }
+
+  async obtenerDetalleNotificacion(citaId: string): Promise<any | null> {
+    const { rows } = await this.pool.query(
+      `SELECT c.codigo_reserva AS "codigoReserva",
+              c.fecha,
+              c.hora_inicio AS "horaInicio",
+              u.correo,
+              (u.nombres || ' ' || u.apellidos) AS nombres,
+              s.nombre AS servicio,
+              s.monto_reserva AS "montoReserva",
+              (ou.nombres || ' ' || ou.apellidos) AS odontologo
+       FROM citas c
+       JOIN pacientes p ON p.id = c.paciente_id
+       JOIN usuarios u ON u.id = p.usuario_id
+       JOIN servicios s ON s.id = c.servicio_id
+       JOIN odontologos o ON o.id = c.odontologo_id
+       JOIN usuarios ou ON ou.id = o.usuario_id
+       WHERE c.id = $1`,
+      [citaId],
+    );
+    return rows[0] ?? null;
+  }
+
+  async listarConfirmadasPorFecha(fecha: string): Promise<any[]> {
+    const { rows } = await this.pool.query(
+      `SELECT c.codigo_reserva AS "codigoReserva",
+              c.fecha,
+              c.hora_inicio AS "horaInicio",
+              u.correo,
+              (u.nombres || ' ' || u.apellidos) AS nombres,
+              s.nombre AS servicio,
+              s.monto_reserva AS "montoReserva",
+              (ou.nombres || ' ' || ou.apellidos) AS odontologo
+       FROM citas c
+       JOIN pacientes p ON p.id = c.paciente_id
+       JOIN usuarios u ON u.id = p.usuario_id
+       JOIN servicios s ON s.id = c.servicio_id
+       JOIN odontologos o ON o.id = c.odontologo_id
+       JOIN usuarios ou ON ou.id = o.usuario_id
+       WHERE c.estado_id = 3 AND c.fecha = $1::date
+       ORDER BY c.hora_inicio`,
+      [fecha],
+    );
+    return rows;
   }
 
   private map(r: any): Cita {

@@ -21,6 +21,25 @@ export const authenticateToken = (tokenService: TokenService) => {
   };
 };
 
+/**
+ * Autenticación opcional: si viene un token válido carga el usuario en la
+ * petición; si no, continúa como visitante anónimo. Se usa en el chatbot,
+ * que puede ser consultado antes de iniciar sesión.
+ */
+export const optionalAuth = (tokenService: TokenService) => {
+  return (req: Request, _res: Response, next: NextFunction): void => {
+    const authHeader = req.headers.authorization;
+    if (authHeader && authHeader.startsWith("Bearer ")) {
+      try {
+        (req as any).user = tokenService.verificar(authHeader.slice(7));
+      } catch {
+        (req as any).user = null;
+      }
+    }
+    next();
+  };
+};
+
 export const authorizeRole = (rolesPermitidos: number[]) => {
   return (req: Request, res: Response, next: NextFunction): void => {
     const user = (req as any).user;

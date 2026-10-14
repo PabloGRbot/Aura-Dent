@@ -2,7 +2,6 @@ import {
   createContext,
   useContext,
   useState,
-  useEffect,
   ReactNode,
 } from "react";
 import { authApi } from "../api/authApi";
@@ -19,23 +18,24 @@ interface AuthContextType {
   token: string | null;
   login: (correo: string, password: string) => Promise<void>;
   logout: () => void;
+  updateUser: (datos: Partial<AuthUser>) => void;
   estaAutenticado: boolean;
 }
 
 const AuthContext = createContext<AuthContextType>({} as AuthContextType);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<AuthUser | null>(null);
-  const [token, setToken] = useState<string | null>(null);
-
-  useEffect(() => {
-    const t = localStorage.getItem("token");
-    const u = localStorage.getItem("usuario");
-    if (t && u) {
-      setToken(t);
-      setUser(JSON.parse(u));
+  const [user, setUser] = useState<AuthUser | null>(() => {
+    try {
+      const u = localStorage.getItem("usuario");
+      return u ? (JSON.parse(u) as AuthUser) : null;
+    } catch {
+      return null;
     }
-  }, []);
+  });
+  const [token, setToken] = useState<string | null>(() =>
+    localStorage.getItem("token"),
+  );
 
   const login = async (correo: string, password: string) => {
     const data = await authApi.login(correo, password);
@@ -58,9 +58,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setUser(null);
   };
 
+  const updateUser = (datos: Partial<AuthUser>) => {
+    setUser((actual) => {
+      if (!actual) return actual;
+      const nuevo = { ...actual, ...datos };
+      localStorage.setItem("usuario", JSON.stringify(nuevo));
+      return nuevo;
+    });
+  };
+
   return (
     <AuthContext.Provider
-      value={{ user, token, login, logout, estaAutenticado: !!token }}
+      value={{ user, token, login, logout, updateUser, estaAutenticado: !!token }}
     >
       {children}
     </AuthContext.Provider>

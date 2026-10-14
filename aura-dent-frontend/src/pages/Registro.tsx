@@ -1,6 +1,7 @@
 import { useState, FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { authApi } from "../api/authApi";
+import { ChatWidget } from "../components/ChatWidget";
 
 export const Registro = () => {
   const navigate = useNavigate();
@@ -101,6 +102,7 @@ export const Registro = () => {
           </Link>
         </p>
       </form>
+      <ChatWidget />
     </div>
   );
 };

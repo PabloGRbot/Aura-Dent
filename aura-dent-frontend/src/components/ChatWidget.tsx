@@ -1,9 +1,11 @@
 import { useState, useRef, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { v4 as uuid } from "uuid";
 import { chatbotApi } from "../api/chatbotApi";
 import type { MensajeChat } from "../types";
 
 export const ChatWidget = () => {
+  const navigate = useNavigate();
   const [abierto, setAbierto] = useState(false);
   const [mensajes, setMensajes] = useState<MensajeChat[]>([
     {
@@ -15,6 +17,7 @@ export const ChatWidget = () => {
   const [input, setInput] = useState("");
   const [sesionId] = useState(() => uuid());
   const [cargando, setCargando] = useState(false);
+  const [sugerirAgendar, setSugerirAgendar] = useState(false);
   const finRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -30,6 +33,7 @@ export const ChatWidget = () => {
     try {
       const r = await chatbotApi.enviar(sesionId, texto);
       setMensajes((m) => [...m, { rol: "ia", texto: r.respuesta }]);
+      setSugerirAgendar(!!r.sugerirAgendar);
     } catch {
       setMensajes((m) => [
         ...m,
@@ -88,7 +92,19 @@ export const ChatWidget = () => {
           </div>
 
           <div className="text-xs text-center text-slate-400 p-2 border-t dark:border-slate-700">
-            Para agendar cita, usa el módulo correspondiente del menú.
+            {sugerirAgendar ? (
+              <button
+                onClick={() => {
+                  setAbierto(false);
+                  navigate("/paciente/agendar");
+                }}
+                className="text-blue-600 hover:underline font-semibold"
+              >
+                📅 Ir a agendar una cita
+              </button>
+            ) : (
+              "Para agendar cita, usa el módulo correspondiente del menú."
+            )}
           </div>
 
           <div className="p-3 border-t dark:border-slate-700 flex gap-2">

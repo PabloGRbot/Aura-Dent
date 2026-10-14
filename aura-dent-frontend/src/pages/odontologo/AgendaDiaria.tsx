@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
 import { citasApi } from "../../api/citasApi";
 import { useAuth } from "../../auth/AuthContext";
+import { hoyLocalISO } from "../../utils/fechas";
+import { ESTADOS_CITA } from "../../utils/estados";
 import type { Cita } from "../../types";
 
 export const AgendaDiaria = () => {
   const { user } = useAuth();
-  const [fecha, setFecha] = useState(new Date().toISOString().split("T")[0]);
+  const [fecha, setFecha] = useState(hoyLocalISO());
   const [citas, setCitas] = useState<Cita[]>([]);
   const [cargando, setCargando] = useState(false);
 
@@ -66,7 +68,17 @@ export const AgendaDiaria = () => {
                 <p className="text-sm text-slate-500">
                   Código: {c.codigoReserva}
                 </p>
-                <p className="text-xs text-slate-400">Estado: {c.estadoId}</p>
+                <p className="text-xs">
+                  <span
+                    className={`px-2 py-0.5 rounded-full font-semibold ${
+                      (ESTADOS_CITA[c.estadoId] || ESTADOS_CITA[1]).color
+                    }`}
+                  >
+                    {(
+                      ESTADOS_CITA[c.estadoId] || ESTADOS_CITA[1]
+                    ).label}
+                  </span>
+                </p>
               </div>
               {c.estadoId === 3 && (
                 <button

@@ -5,6 +5,17 @@ import { PacienteRepository } from "../../../domain/ports/PacienteRepository";
 export class PostgresPacienteRepository implements PacienteRepository {
   constructor(private pool: Pool) {}
 
+  /**
+   * Normaliza la fecha de nacimiento a 'YYYY-MM-DD'. Si viniera como Date se
+   * pasa primero por toISOString() para evitar el desfase de zona horaria
+   * (ej: '1990-01-01' → 1989-12-31 en UTC-5).
+   */
+  private aFechaISO(fecha: Date | string | null): string | null {
+    if (fecha === null || fecha === undefined || fecha === "") return null;
+    if (typeof fecha === "string") return fecha.slice(0, 10);
+    return fecha.toISOString().slice(0, 10);
+  }
+
   async crear(p: Paciente): Promise<Paciente> {
     const query = `
       INSERT INTO pacientes (id, usuario_id, fecha_nacimiento, direccion, alergias)
@@ -14,7 +25,7 @@ export class PostgresPacienteRepository implements PacienteRepository {
     const values = [
       p.id,
       p.usuarioId,
-      p.fechaNacimiento,
+      this.aFechaISO(p.fechaNacimiento),
       p.direccion,
       p.alergias,
     ];
@@ -50,7 +61,7 @@ export class PostgresPacienteRepository implements PacienteRepository {
       `UPDATE pacientes
        SET fecha_nacimiento=$1, direccion=$2, alergias=$3, updated_at=NOW()
        WHERE id=$4`,
-      [p.fechaNacimiento, p.direccion, p.alergias, p.id],
+      [this.aFechaISO(p.fechaNacimiento), p.direccion, p.alergias, p.id],
     );
     return p;
   }

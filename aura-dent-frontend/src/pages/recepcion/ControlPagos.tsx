@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { pagosApi } from "../../api/pagosApi";
+import { etiquetaEstadoPago } from "../../utils/estados";
 
 export const ControlPagos = () => {
   const [pagos, setPagos] = useState<any[]>([]);
@@ -35,7 +36,7 @@ export const ControlPagos = () => {
                 </td>
                 <td className="p-3 font-semibold">S/ {p.monto}</td>
                 <td className="p-3">{p.codigoOperacion || "—"}</td>
-                <td className="p-3">{p.estadoId}</td>
+                <td className="p-3">{etiquetaEstadoPago(p.estadoId)}</td>
               </tr>
             ))}
             {pagos.length === 0 && (
