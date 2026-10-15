@@ -61,4 +61,4 @@ Usuarios demo (contraseña `demo1234`): `admin@auradent.com`, `odontologo@aurade
 | `npm test` | Ejecuta las pruebas del backend |
 | `npm start` | Ejecuta el backend compilado |
 
-Cada workspace conserva además sus propios scripts (`npm run <script> --workspace backend|frontend`)  .
+Cada  workspace conserva además sus propios scripts (`npm run <script> --workspace backend|frontend`)  .
