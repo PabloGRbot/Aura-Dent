@@ -31,7 +31,13 @@ export function crearAutenticacionControlador(
 
   router.post('/autenticacion/registro', async (req: Request, res: Response) => {
     try {
-      const { nombres, apellidos, email, password, dniCe, fechaNacimiento, alergias } = req.body;
+      const { nombres, apellidos, email, password, dniCe, fechaNacimiento, alergias, aceptaTerminos } =
+        req.body;
+
+      if (aceptaTerminos !== true) {
+        res.status(400).json({ mensaje: 'Debes aceptar los Términos y Condiciones.' });
+        return;
+      }
 
       await crearUsuario.crear({
         nombres,

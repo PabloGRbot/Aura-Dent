@@ -1,4 +1,5 @@
 import { FormEvent, useEffect, useRef, useState } from 'react';
+import { preguntarAsistente } from '../api/asistente';
 import { responderPregunta, SUGERENCIAS_FAQ } from '../faq';
 
 interface Mensaje {
@@ -9,37 +10,51 @@ interface Mensaje {
 const MENSAJE_INICIAL: Mensaje = {
   autor: 'bot',
   texto:
-    '¡Hola! Soy el asistente virtual de Aura-Dent. Puedo darte información sobre horarios, ubicación, servicios, precios, medios de pago y cómo reservar tu cita.'
+    '¡Hola! Soy el asistente virtual de Aura-Dent. Puedo resolver tus dudas sobre servicios, precios, horarios, reservas y cualquier otra consulta sobre la clínica.'
 };
 
 export function ChatIaWidget() {
   const [abierto, setAbierto] = useState(false);
   const [mensajes, setMensajes] = useState<Mensaje[]>([MENSAJE_INICIAL]);
   const [texto, setTexto] = useState('');
+  const [sugerenciasVisibles, setSugerenciasVisibles] = useState(true);
+  const [esperando, setEsperando] = useState(false);
   const finMensajes = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (abierto) {
       finMensajes.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
     }
-  }, [abierto, mensajes]);
+  }, [abierto, mensajes, esperando]);
 
-  function enviar(consulta: string): void {
+  async function enviar(consulta: string): Promise<void> {
     const limpio = consulta.trim();
-    if (!limpio) {
+    if (!limpio || esperando) {
       return;
     }
-    setMensajes((anteriores) => [
-      ...anteriores,
-      { autor: 'usuario', texto: limpio },
-      { autor: 'bot', texto: responderPregunta(limpio) }
-    ]);
+
+    const historial = mensajes;
+    setMensajes((anteriores) => [...anteriores, { autor: 'usuario', texto: limpio }]);
     setTexto('');
+    setSugerenciasVisibles(false);
+    setEsperando(true);
+
+    try {
+      const { respuesta } = await preguntarAsistente(limpio, historial);
+      setMensajes((anteriores) => [...anteriores, { autor: 'bot', texto: respuesta }]);
+    } catch {
+      setMensajes((anteriores) => [
+        ...anteriores,
+        { autor: 'bot', texto: responderPregunta(limpio) }
+      ]);
+    } finally {
+      setEsperando(false);
+    }
   }
 
   function manejarEnvio(evento: FormEvent): void {
     evento.preventDefault();
-    enviar(texto);
+    void enviar(texto);
   }
 
   return (
@@ -59,24 +74,35 @@ export function ChatIaWidget() {
                 {mensaje.texto}
               </p>
             ))}
+            {esperando && <p className="burbuja bot esperando">Escribiendo…</p>}
             <div ref={finMensajes} />
           </div>
 
-          <div className="chat-sugerencias">
-            {SUGERENCIAS_FAQ.map((sugerencia) => (
-              <button key={sugerencia} type="button" onClick={() => enviar(sugerencia)}>
-                {sugerencia}
-              </button>
-            ))}
-          </div>
+          {sugerenciasVisibles && (
+            <div className="chat-sugerencias">
+              {SUGERENCIAS_FAQ.map((sugerencia) => (
+                <button
+                  key={sugerencia}
+                  type="button"
+                  onClick={() => void enviar(sugerencia)}
+                  disabled={esperando}
+                >
+                  {sugerencia}
+                </button>
+              ))}
+            </div>
+          )}
 
           <form className="chat-entrada" onSubmit={manejarEnvio}>
             <input
               value={texto}
               onChange={(evento) => setTexto(evento.target.value)}
-              placeholder="Escribe tu pregunta..."
+              placeholder={esperando ? 'El asistente está respondiendo…' : 'Escribe tu pregunta...'}
+              disabled={esperando}
             />
-            <button type="submit">Enviar</button>
+            <button type="submit" disabled={esperando}>
+              Enviar
+            </button>
           </form>
         </div>
       )}

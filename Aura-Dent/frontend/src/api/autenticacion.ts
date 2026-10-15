@@ -9,6 +9,7 @@ export interface DatosRegistro {
   dniCe: string;
   fechaNacimiento?: string | null;
   alergias?: string | null;
+  aceptaTerminos: boolean;
 }
 
 export function login(email: string, password: string): Promise<SesionAutenticacion> {

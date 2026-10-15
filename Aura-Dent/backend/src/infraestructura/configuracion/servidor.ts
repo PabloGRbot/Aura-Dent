@@ -1,6 +1,7 @@
 import cors from 'cors';
 import express, { Express } from 'express';
 import { ConsultarDisponibilidadCasoUso } from '../../aplicacion/casos_uso/asistente_ia/consultar_disponibilidad_caso_uso';
+import { ResponderConsultaCasoUso } from '../../aplicacion/casos_uso/asistente_ia/responder_consulta_caso_uso';
 import { LoginCasoUso } from '../../aplicacion/casos_uso/autenticacion/login_caso_uso';
 import { ObtenerPerfilCasoUso } from '../../aplicacion/casos_uso/autenticacion/obtener_perfil_caso_uso';
 import { AgregarNotaCasoUso } from '../../aplicacion/casos_uso/agenda/agregar_nota_caso_uso';
@@ -41,6 +42,7 @@ import { crearConexionPostgres } from '../adaptadores/salida/base_datos_postgres
 import { NotaPostgresRepositorio } from '../adaptadores/salida/base_datos_postgres/nota_postgres_repositorio';
 import { PagoPostgresRepositorio } from '../adaptadores/salida/base_datos_postgres/pago_postgres_repositorio';
 import { UsuarioPostgresRepositorio } from '../adaptadores/salida/base_datos_postgres/usuario_postgres_repositorio';
+import { GeminiAdaptador } from '../adaptadores/salida/gemini/gemini_adaptador';
 import { PasarelaQrSimuladaAdaptador } from '../adaptadores/salida/pasarela_pagos_qr/pasarela_qr_simulada_adaptador';
 import { HasheadorBcrypt } from '../adaptadores/salida/seguridad/hasheador_bcrypt';
 import { TokenJwt } from '../adaptadores/salida/seguridad/token_jwt';
@@ -82,6 +84,7 @@ export function crearServidor(): Express {
   const pagarCita = new PagarCitaCasoUso(citaRepositorio, pagoRepositorio, pasarelaPago);
   const validarPagoQr = new ValidarPagoQrCasoUso(pagoRepositorio, pasarelaPago, generadorId);
   const consultarDisponibilidad = new ConsultarDisponibilidadCasoUso(citaRepositorio);
+  const responderConsulta = new ResponderConsultaCasoUso(new GeminiAdaptador());
   const login = new LoginCasoUso(usuarioRepositorio, hasheador, token);
   const obtenerPerfil = new ObtenerPerfilCasoUso(usuarioRepositorio);
   const listarUsuarios = new ListarUsuariosCasoUso(usuarioRepositorio);
@@ -154,7 +157,7 @@ export function crearServidor(): Express {
     )
   );
   app.use('/api', crearPagosControlador(validarPagoQr));
-  app.use('/api', crearChatControlador(consultarDisponibilidad));
+  app.use('/api', crearChatControlador(consultarDisponibilidad, responderConsulta));
 
   return app;
 }

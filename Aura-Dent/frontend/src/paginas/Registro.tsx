@@ -1,6 +1,7 @@
 import { FormEvent, useState } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { registrar } from '../api/autenticacion';
+import { ModalTerminos } from '../componentes/ModalTerminos';
 import { useAutenticacion } from '../contexto/ContextoAutenticacion';
 import { RUTA_INICIO_POR_ROL, RUTA_RESERVA_PACIENTE } from '../navegacion';
 
@@ -32,6 +33,8 @@ export function Registro() {
   const [form, setForm] = useState<FormularioRegistro>(FORMULARIO_VACIO);
   const [error, setError] = useState<string | null>(null);
   const [enviando, setEnviando] = useState(false);
+  const [aceptaTerminos, setAceptaTerminos] = useState(false);
+  const [verTerminos, setVerTerminos] = useState(false);
 
   function actualizarCampo(campo: keyof FormularioRegistro, valor: string) {
     setForm((previo) => ({ ...previo, [campo]: valor }));
@@ -49,6 +52,10 @@ export function Registro() {
       setError('Las contraseñas no coinciden');
       return;
     }
+    if (!aceptaTerminos) {
+      setError('Debes aceptar los Términos y Condiciones');
+      return;
+    }
 
     setEnviando(true);
     try {
@@ -59,7 +66,8 @@ export function Registro() {
         password: form.password,
         dniCe: form.dniCe,
         fechaNacimiento: form.fechaNacimiento || null,
-        alergias: form.alergias || null
+        alergias: form.alergias || null,
+        aceptaTerminos: true
       });
       iniciarSesion(sesion.token, sesion.usuario);
       navegar(RUTA_RESERVA_PACIENTE, { replace: true });
@@ -158,6 +166,19 @@ export function Registro() {
           </label>
         </div>
 
+        <div className="acepta-terminos">
+          <input
+            id="acepta-terminos"
+            type="checkbox"
+            checked={aceptaTerminos}
+            onChange={(e) => setAceptaTerminos(e.target.checked)}
+          />
+          <label htmlFor="acepta-terminos">He leído y acepto los</label>
+          <button type="button" className="enlace-terminos" onClick={() => setVerTerminos(true)}>
+            Términos y Condiciones
+          </button>
+        </div>
+
         {error && <p className="error">{error}</p>}
 
         <button type="submit" disabled={enviando}>
@@ -170,6 +191,15 @@ export function Registro() {
           Volver al inicio
         </Link>
       </form>
+
+      <ModalTerminos
+        abierto={verTerminos}
+        onCerrar={() => setVerTerminos(false)}
+        onAceptar={() => {
+          setAceptaTerminos(true);
+          setVerTerminos(false);
+        }}
+      />
     </main>
   );
 }

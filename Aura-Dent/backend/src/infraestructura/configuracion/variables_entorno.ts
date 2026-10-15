@@ -26,5 +26,9 @@ export const variablesEntorno = {
   pagoQr: {
     urlBase: process.env.PAGO_QR_URL ?? 'http://localhost:4000',
     apiKey: process.env.PAGO_QR_API_KEY ?? ''
+  },
+  gemini: {
+    apiKey: process.env.GEMINI_API_KEY ?? '',
+    modelo: process.env.GEMINI_MODELO ?? 'gemini-3.5-flash'
   }
 };
