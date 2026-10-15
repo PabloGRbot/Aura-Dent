@@ -57,10 +57,10 @@ CREATE TABLE IF NOT EXISTS notas_clinicas (
 const CONFIGURACION_DEMO: Record<string, string> = {
   nombre_establecimiento: 'Aura-Dent',
   direccion: 'Av. Los Álamos 123, Miraflores',
+  ubicacion_mapa:
+    'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3900.857953121273!2d-77.03035868465102!3d-12.123570791414038!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x9105c818cd4c5f2b%3A0x82c27f1a16cfa4ab!2sMiraflores%2C%20Lima%2C%20Per%C3%BA!5e0!3m2!1ses!2spe!4v1700000000000!5m2!1ses!2spe',
   telefono: '(01) 555-0123',
   email_contacto: 'contacto@auradent.com',
-  horario_semana: '8:00 - 20:00',
-  horario_sabado: '8:00 - 14:00',
   duracion_cita: '30',
   adelanto_reserva: '10',
   moneda: 'PEN'

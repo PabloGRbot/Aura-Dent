@@ -1,4 +1,6 @@
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { obtenerConfiguracion } from '../api/configuracion';
 import { CATALOGO_SERVICIOS } from '../catalogo_servicios';
 import { ChatIaWidget } from '../componentes/ChatIaWidget';
 import { useAutenticacion } from '../contexto/ContextoAutenticacion';
@@ -10,12 +12,26 @@ const HORARIOS = [
   { dia: 'Domingos y feriados', hora: 'Cerrado' }
 ];
 
+const DIRECCION_POR_DEFECTO = 'Av. Los Álamos 123, Miraflores, Lima';
+const MAPA_POR_DEFECTO =
+  'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3900.857953121273!2d-77.03035868465102!3d-12.123570791414038!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x9105c818cd4c5f2b%3A0x82c27f1a16cfa4ab!2sMiraflores%2C%20Lima%2C%20Per%C3%BA!5e0!3m2!1ses!2spe!4v1700000000000!5m2!1ses!2spe';
+
 const PASTELES = ['mint', 'sage', 'sky', 'cream', 'lilac', 'peach'];
 
 export function InicioPublico() {
   const { usuario } = useAutenticacion();
+  const [config, setConfig] = useState<Record<string, string>>({});
   const destinoPanel = usuario ? RUTA_INICIO_POR_ROL[usuario.rol] : '/login';
   const textoBoton = usuario ? 'Ir a mi panel' : 'Iniciar sesión';
+
+  useEffect(() => {
+    obtenerConfiguracion()
+      .then(setConfig)
+      .catch(() => undefined);
+  }, []);
+
+  const direccion = config.direccion || DIRECCION_POR_DEFECTO;
+  const mapa = config.ubicacion_mapa || MAPA_POR_DEFECTO;
 
   return (
     <div className="landing">
@@ -156,11 +172,11 @@ export function InicioPublico() {
             <div className="mapa-contenedor-pequeno">
               <iframe
                 className="mapa-iframe"
-                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3900.857953121273!2d-77.03035868465102!3d-12.123570791414038!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x9105c818cd4c5f2b%3A0x82c27f1a16cfa4ab!2sMiraflores%2C%20Lima%2C%20Per%C3%BA!5e0!3m2!1ses!2spe!4v1700000000000!5m2!1ses!2spe"
+                src={mapa}
                 loading="lazy"
                 referrerPolicy="no-referrer-when-downgrade"
                 allowFullScreen
-                title="Ubicación de Aura-Dent en Miraflores, Lima"
+                title="Ubicación de Aura-Dent"
               />
             </div>
           </article>
@@ -171,11 +187,11 @@ export function InicioPublico() {
           <div className="contacto-grid">
             <p>
               <span className="contacto-etiqueta">Dirección</span>
-              Av. Los Álamos 123, Miraflores, Lima
+              {direccion}
             </p>
             <p>
               <span className="contacto-etiqueta">Teléfono</span>
-              (01) 555-0123
+              {config.telefono || '(01) 555-0123'}
             </p>
             <p>
               <span className="contacto-etiqueta">WhatsApp</span>
@@ -183,7 +199,7 @@ export function InicioPublico() {
             </p>
             <p>
               <span className="contacto-etiqueta">Correo</span>
-              contacto@auradent.com
+              {config.email_contacto || 'contacto@auradent.com'}
             </p>
           </div>
         </article>

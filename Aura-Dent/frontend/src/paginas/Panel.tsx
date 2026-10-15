@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { obtenerAgenda } from '../api/agenda';
+import { obtenerConfiguracion } from '../api/configuracion';
 import { listarCitasRecepcion, listarPagosRecepcion } from '../api/recepcion';
 import { listarUsuarios } from '../api/usuarios';
 import { ChatIaWidget } from '../componentes/ChatIaWidget';
@@ -106,6 +107,10 @@ const CONTENIDO: Record<Rol, ContenidoPanel> = {
     ]
   }
 };
+
+const DIRECCION_POR_DEFECTO = 'Av. Los Álamos 123, Miraflores, Lima';
+const MAPA_POR_DEFECTO =
+  'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3900.857953121273!2d-77.03035868465102!3d-12.123570791414038!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x9105c818cd4c5f2b%3A0x82c27f1a16cfa4ab!2sMiraflores%2C%20Lima%2C%20Per%C3%BA!5e0!3m2!1ses!2spe!4v1700000000000!5m2!1ses!2spe';
 
 const ETIQUETA_CONTEO: { rol: Rol; etiqueta: string }[] = [
   { rol: 'Paciente', etiqueta: 'Pacientes' },
@@ -231,6 +236,13 @@ function ResumenRecepcion() {
 
 export function Panel() {
   const { usuario } = useAutenticacion();
+  const [config, setConfig] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    obtenerConfiguracion()
+      .then(setConfig)
+      .catch(() => undefined);
+  }, []);
 
   if (!usuario) {
     return null;
@@ -274,17 +286,17 @@ export function Panel() {
         <div className="panel-ubicacion">
           <h2>Ubicación de la clínica</h2>
           <p className="texto">
-            Av. Los Álamos 123, Miraflores, Lima. Referencia para citas presenciales y
+            {config.direccion || DIRECCION_POR_DEFECTO}. Referencia para citas presenciales y
             coordinación de la agenda diaria.
           </p>
           <div className="mapa-contenedor-pequeno">
             <iframe
               className="mapa-iframe"
-              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3900.857953121273!2d-77.03035868465102!3d-12.123570791414038!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x9105c818cd4c5f2b%3A0x82c27f1a16cfa4ab!2sMiraflores%2C%20Lima%2C%20Per%C3%BA!5e0!3m2!1ses!2spe!4v1700000000000!5m2!1ses!2spe"
+              src={config.ubicacion_mapa || MAPA_POR_DEFECTO}
               loading="lazy"
               referrerPolicy="no-referrer-when-downgrade"
               allowFullScreen
-              title="Ubicación de Aura-Dent en Miraflores, Lima"
+              title="Ubicación de Aura-Dent"
             />
           </div>
         </div>

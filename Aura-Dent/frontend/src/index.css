@@ -1488,6 +1488,28 @@ a.tarjeta-accion:hover {
   margin-top: 20px;
 }
 
+.form-config fieldset {
+  border: 1px solid var(--borde);
+  border-radius: 12px;
+  padding: 8px 16px 16px;
+  margin-bottom: 18px;
+}
+
+.form-config fieldset + fieldset {
+  margin-bottom: 0;
+}
+
+.form-config legend {
+  font-size: 13px;
+  font-weight: 700;
+  color: #0f172a;
+  padding: 0 6px;
+}
+
+.form-config fieldset .form-grid {
+  margin-top: 12px;
+}
+
 @media (max-width: 560px) {
   .form-grid {
     grid-template-columns: 1fr;

@@ -7,13 +7,19 @@ interface CampoConfig {
   tipo: 'text' | 'number';
 }
 
-const CAMPOS: CampoConfig[] = [
+const CAMPOS_UBICACION: CampoConfig[] = [
+  { clave: 'direccion', etiqueta: 'Dirección del establecimiento', tipo: 'text' },
+  {
+    clave: 'ubicacion_mapa',
+    etiqueta: 'URL de Google Maps (enlace "Compartir" o código de incrustación)',
+    tipo: 'text'
+  }
+];
+
+const CAMPOS_GENERALES: CampoConfig[] = [
   { clave: 'nombre_establecimiento', etiqueta: 'Nombre del establecimiento', tipo: 'text' },
-  { clave: 'direccion', etiqueta: 'Dirección', tipo: 'text' },
   { clave: 'telefono', etiqueta: 'Teléfono', tipo: 'text' },
   { clave: 'email_contacto', etiqueta: 'Email de contacto', tipo: 'text' },
-  { clave: 'horario_semana', etiqueta: 'Horario (lunes a viernes)', tipo: 'text' },
-  { clave: 'horario_sabado', etiqueta: 'Horario (sábados)', tipo: 'text' },
   { clave: 'duracion_cita', etiqueta: 'Duración de cita (minutos)', tipo: 'number' },
   { clave: 'adelanto_reserva', etiqueta: 'Adelanto de reserva (S/)', tipo: 'number' },
   { clave: 'moneda', etiqueta: 'Moneda', tipo: 'text' }
@@ -77,19 +83,38 @@ export function ConfiguracionAdmin() {
       {error && <p className="error">{error}</p>}
 
       <form className="form-config" onSubmit={manejarEnvio}>
-        <div className="form-grid">
-          {CAMPOS.map((campo) => (
-            <label key={campo.clave}>
-              {campo.etiqueta}
-              <input
-                type={campo.tipo}
-                min={campo.tipo === 'number' ? 0 : undefined}
-                value={valores[campo.clave] ?? ''}
-                onChange={(e) => actualizar(campo.clave, e.target.value)}
-              />
-            </label>
-          ))}
-        </div>
+        <fieldset>
+          <legend>Ubicación del establecimiento</legend>
+          <div className="form-grid">
+            {CAMPOS_UBICACION.map((campo) => (
+              <label key={campo.clave}>
+                {campo.etiqueta}
+                <input
+                  type={campo.tipo}
+                  value={valores[campo.clave] ?? ''}
+                  onChange={(e) => actualizar(campo.clave, e.target.value)}
+                />
+              </label>
+            ))}
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend>Datos y parámetros de reserva</legend>
+          <div className="form-grid">
+            {CAMPOS_GENERALES.map((campo) => (
+              <label key={campo.clave}>
+                {campo.etiqueta}
+                <input
+                  type={campo.tipo}
+                  min={campo.tipo === 'number' ? 0 : undefined}
+                  value={valores[campo.clave] ?? ''}
+                  onChange={(e) => actualizar(campo.clave, e.target.value)}
+                />
+              </label>
+            ))}
+          </div>
+        </fieldset>
         <button type="submit" disabled={guardando}>
           {guardando ? 'Guardando...' : 'Guardar configuración'}
         </button>
