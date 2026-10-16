@@ -645,7 +645,7 @@ button:hover {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  animation: aparecer-arriba 0.7s ease 0.15s both, flotar 6s ease-in-out 1s infinite;
+  animation: aparecer-arriba 0.7s ease 0.15s both, flotar 3s ease-in-out 1s infinite;
 }
 
 .hero-tarjeta h3 {
@@ -776,6 +776,96 @@ button:hover {
   color: var(--verde);
 }
 
+/* ---------- Carrusel de servicios (sin librerías) ---------- */
+.carrusel-servicios {
+  position: relative;
+  margin: 48px auto 0;
+  max-width: 1400px;
+}
+.carrusel-viewport {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radio-tarjeta);
+}
+.carrusel-track {
+  width: 100%;
+  display: flex;
+  transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform;
+}
+.carrusel-slide {
+  flex: 0 0 auto;
+  flex-shrink: 0;
+  width: calc(
+    (100% - var(--carrusel-gap) * (var(--pv) - 1)) / var(--pv)
+  );
+}
+.carrusel-slide .servicio-card {
+  animation: none;
+  height: 100%;
+}
+.carrusel-slide .servicio-imagen {
+  height: 240px;
+}
+.carrusel-slide .servicio-cuerpo {
+  padding: 20px;
+}
+
+.carrusel-control {
+  position: absolute;
+  top: 50%;
+  z-index: 2;
+  width: 44px;
+  height: 44px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.9);
+  color: var(--verde);
+  font-size: 20px;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transition: background 0.2s ease, transform 0.15s ease;
+  display: grid;
+  place-items: center;
+  line-height: 1;
+}
+.carrusel-control:hover {
+  background: #fff;
+  transform: translateY(-50%) scale(1.05);
+}
+.carrusel-control:active {
+  transform: translateY(-50%) scale(0.92);
+}
+.carrusel-control--prev {
+  left: 12px;
+}
+.carrusel-control--next {
+  right: 12px;
+}
+
+.carrusel-puntos {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 16px;
+}
+.punto {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: none;
+  background: #d1d5db;
+  cursor: pointer;
+  padding: 0;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+.punto:hover {
+  background: #9ca3af;
+}
+.punto.activo {
+  background: var(--verde);
+  transform: scale(1.4);
+}
 
 .info-grid {
   display: grid;
@@ -1328,6 +1418,13 @@ button:hover {
 }
 
 /* ---------- Administración (usuarios y configuración) ---------- */
+.encabezado-acciones {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
 .encabezado-seccion {
   display: flex;
   align-items: flex-start;
@@ -1468,6 +1565,13 @@ a.tarjeta-accion:hover {
   gap: 6px;
   font-size: 13px;
   color: var(--gris);
+  min-width: 0;
+}
+
+.form-grid select,
+.form-grid input {
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .form-grid label.ancho-completo {
@@ -1567,6 +1671,40 @@ a.tarjeta-accion:hover {
 .nota-fecha {
   color: var(--gris);
   font-size: 12px;
+}
+
+.nota-acciones {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.edicion-nota {
+  margin-top: 8px;
+}
+
+.edicion-nota textarea {
+  width: 100%;
+  min-height: 80px;
+  padding: 8px;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-boton);
+  font-family: inherit;
+  font-size: 14px;
+  resize: vertical;
+}
+
+.boton-confirmar {
+  background: var(--verde);
+  color: #fff;
+  border: none;
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.boton-confirmar:hover {
+  opacity: 0.9;
 }
 
 .campo-nota {

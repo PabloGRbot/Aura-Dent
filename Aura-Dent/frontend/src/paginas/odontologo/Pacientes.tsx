@@ -1,37 +1,41 @@
-import { useEffect, useState } from 'react';
-import { obtenerAgenda } from '../../api/agenda';
-import { CitaAgenda } from '../../tipos';
-
-interface PacienteResumen {
-  nombre: string;
-  dni: string;
-  atenciones: number;
-  ultimoServicio: string | null;
-}
+import { useCallback, useEffect, useState } from 'react';
+import { listarMisPacientes } from '../../api/odontologo';
+import { useAutenticacion } from '../../contexto/ContextoAutenticacion';
+import { PacienteRecepcion } from '../../api/recepcion';
 
 export function PacientesOdontologo() {
-  const [pacientes, setPacientes] = useState<PacienteResumen[]>([]);
+  const { usuario } = useAutenticacion();
+  const [pacientes, setPacientes] = useState<PacienteRecepcion[]>([]);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    obtenerAgenda()
-      .then((agenda) => setPacientes(resumirPacientes(agenda)))
-      .catch((e) => setError((e as Error).message))
-      .finally(() => setCargando(false));
+  const cargar = useCallback(async () => {
+    try {
+      setPacientes(await listarMisPacientes());
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setCargando(false);
+    }
   }, []);
+
+  useEffect(() => {
+    cargar();
+  }, [cargar]);
 
   return (
     <section className="panel">
-      <h1>Pacientes</h1>
-      <p className="subtitulo">Pacientes con citas confirmadas en la clínica.</p>
-
+      <h1>Mis pacientes</h1>
+      <p className="subtitulo">
+        Pacientes asignados a tu odontología.
+      </p>
       {error && <p className="error">{error}</p>}
-
       {cargando ? (
         <p className="subtitulo">Cargando pacientes...</p>
       ) : pacientes.length === 0 ? (
-        <p className="subtitulo">Aún no hay pacientes con citas confirmadas.</p>
+        <p className="subtitulo">
+          {usuario ? 'No tienes pacientes asignados.' : 'No se pudo identificar tu usuario.'}
+        </p>
       ) : (
         <div className="tabla-contenedor">
           <table className="tabla">
@@ -39,17 +43,15 @@ export function PacientesOdontologo() {
               <tr>
                 <th>Paciente</th>
                 <th>DNI/CE</th>
-                <th>Atenciones</th>
-                <th>Último servicio</th>
+                <th>Email</th>
               </tr>
             </thead>
             <tbody>
-              {pacientes.map((paciente) => (
-                <tr key={`${paciente.nombre}-${paciente.dni}`}>
-                  <td>{paciente.nombre}</td>
-                  <td>{paciente.dni}</td>
-                  <td>{paciente.atenciones}</td>
-                  <td>{paciente.ultimoServicio ?? 'Consulta general'}</td>
+              {pacientes.map((p) => (
+                <tr key={p.id}>
+                  <td>{p.nombres} {p.apellidos}</td>
+                  <td>{p.dniCe}</td>
+                  <td>{p.email}</td>
                 </tr>
               ))}
             </tbody>
@@ -58,24 +60,4 @@ export function PacientesOdontologo() {
       )}
     </section>
   );
-}
-
-function resumirPacientes(agenda: CitaAgenda[]): PacienteResumen[] {
-  const mapa = new Map<string, PacienteResumen>();
-  for (const cita of agenda) {
-    const clave = `${cita.pacienteNombre}-${cita.pacienteDni}`;
-    const existente = mapa.get(clave);
-    if (existente) {
-      existente.atenciones += 1;
-      existente.ultimoServicio = cita.servicio ?? existente.ultimoServicio;
-    } else {
-      mapa.set(clave, {
-        nombre: cita.pacienteNombre,
-        dni: cita.pacienteDni,
-        atenciones: 1,
-        ultimoServicio: cita.servicio
-      });
-    }
-  }
-  return Array.from(mapa.values());
 }

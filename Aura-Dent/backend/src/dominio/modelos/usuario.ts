@@ -8,9 +8,10 @@ export class Usuario {
     public email: string,
     public passwordHash: string,
     public dniCe: string,
-    public fechaNacimiento: Date | null,
-    public alergias: string | null,
-    public rol: Rol
+  public fechaNacimiento: Date | null,
+  public alergias: string | null,
+  public rol: Rol,
+  public odontologoAsignadoId: string | null
   ) {}
 
   get nombreCompleto(): string {

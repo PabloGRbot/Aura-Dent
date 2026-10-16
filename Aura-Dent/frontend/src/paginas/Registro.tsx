@@ -57,6 +57,15 @@ export function Registro() {
       return;
     }
 
+    if (form.fechaNacimiento) {
+      const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
+      const nacimiento = new Date(form.fechaNacimiento); nacimiento.setHours(0, 0, 0, 0);
+      if (nacimiento > hoy) {
+        setError('La fecha de nacimiento no puede ser futura');
+        return;
+      }
+    }
+
     setEnviando(true);
     try {
       const sesion = await registrar({

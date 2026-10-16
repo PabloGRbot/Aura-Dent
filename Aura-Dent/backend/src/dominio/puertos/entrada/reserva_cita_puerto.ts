@@ -27,6 +27,7 @@ export interface SolicitudCita {
   fecha: Date;
   duracionMinutos: number;
   servicio: string | null;
+  odontologoId?: string | null;
 }
 
 export interface ResultadoCrearCita {

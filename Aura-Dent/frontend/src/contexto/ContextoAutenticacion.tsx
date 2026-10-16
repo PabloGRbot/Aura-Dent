@@ -7,6 +7,7 @@ interface EstadoAutenticacion {
   usuario: Usuario | null;
   cargando: boolean;
   iniciarSesion: (token: string, usuario: Usuario) => void;
+  actualizarUsuario: (usuario: Usuario) => void;
   cerrarSesion: () => void;
 }
 
@@ -34,13 +35,19 @@ export function ProveedorAutenticacion({ children }: { children: ReactNode }) {
     setUsuario(datosUsuario);
   }
 
+  function actualizarUsuario(datosUsuario: Usuario): void {
+    setUsuario(datosUsuario);
+  }
+
   function cerrarSesion(): void {
     localStorage.removeItem(CLAVE_TOKEN);
     setUsuario(null);
   }
 
   return (
-    <Contexto.Provider value={{ usuario, cargando, iniciarSesion, cerrarSesion }}>
+    <Contexto.Provider
+      value={{ usuario, cargando, iniciarSesion, actualizarUsuario, cerrarSesion }}
+    >
       {children}
     </Contexto.Provider>
   );

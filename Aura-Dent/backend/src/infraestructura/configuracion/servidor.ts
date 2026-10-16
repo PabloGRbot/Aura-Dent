@@ -5,6 +5,8 @@ import { ResponderConsultaCasoUso } from '../../aplicacion/casos_uso/asistente_i
 import { LoginCasoUso } from '../../aplicacion/casos_uso/autenticacion/login_caso_uso';
 import { ObtenerPerfilCasoUso } from '../../aplicacion/casos_uso/autenticacion/obtener_perfil_caso_uso';
 import { AgregarNotaCasoUso } from '../../aplicacion/casos_uso/agenda/agregar_nota_caso_uso';
+import { ActualizarNotaCasoUso } from '../../aplicacion/casos_uso/agenda/actualizar_nota_caso_uso';
+import { EliminarNotaCasoUso } from '../../aplicacion/casos_uso/agenda/eliminar_nota_caso_uso';
 import { AsignarCitaCasoUso } from '../../aplicacion/casos_uso/agenda/asignar_cita_caso_uso';
 import { ListarAgendaCasoUso } from '../../aplicacion/casos_uso/agenda/listar_agenda_caso_uso';
 import { ListarNotasCitaCasoUso } from '../../aplicacion/casos_uso/agenda/listar_notas_cita_caso_uso';
@@ -13,20 +15,31 @@ import { ActualizarConfiguracionCasoUso } from '../../aplicacion/casos_uso/confi
 import { ObtenerConfiguracionCasoUso } from '../../aplicacion/casos_uso/configuracion/obtener_configuracion_caso_uso';
 import { ValidarPagoQrCasoUso } from '../../aplicacion/casos_uso/pagos/validar_pago_qr_caso_uso';
 import { ConfirmarPagoCasoUso } from '../../aplicacion/casos_uso/recepcion/confirmar_pago_caso_uso';
+import { RegistrarPagoManualCasoUso } from '../../aplicacion/casos_uso/recepcion/registrar_pago_manual_caso_uso';
 import { ListarCitasTodasCasoUso } from '../../aplicacion/casos_uso/recepcion/listar_citas_todas_caso_uso';
 import { ListarPagosCasoUso } from '../../aplicacion/casos_uso/recepcion/listar_pagos_caso_uso';
 import { RechazarPagoCasoUso } from '../../aplicacion/casos_uso/recepcion/rechazar_pago_caso_uso';
+import { ConfirmarCitaCasoUso } from '../../aplicacion/casos_uso/reserva_citas/confirmar_cita_caso_uso';
+import { ListarUsuariosPorRolCasoUso } from '../../aplicacion/casos_uso/usuarios/listar_usuarios_por_rol_caso_uso';
+import { ListarPacientesPorOdontologoCasoUso } from '../../aplicacion/casos_uso/usuarios/listar_pacientes_por_odontologo_caso_uso';
 import { ActualizarUsuarioCasoUso } from '../../aplicacion/casos_uso/usuarios/actualizar_usuario_caso_uso';
 import { CrearUsuarioCasoUso } from '../../aplicacion/casos_uso/usuarios/crear_usuario_caso_uso';
 import { EliminarUsuarioCasoUso } from '../../aplicacion/casos_uso/usuarios/eliminar_usuario_caso_uso';
-import { ListarUsuariosCasoUso } from '../../aplicacion/casos_uso/usuarios/listar_usuarios_caso_uso';
-import { ConfirmarCitaCasoUso } from '../../aplicacion/casos_uso/reserva_citas/confirmar_cita_caso_uso';
+import { EmitirComprobanteCasoUso } from '../../aplicacion/casos_uso/comprobantes/emitir_comprobante_caso_uso';
+import { ListarComprobantesCasoUso } from '../../aplicacion/casos_uso/comprobantes/listar_comprobantes_caso_uso';
+import { ListarComprobantesPacienteCasoUso } from '../../aplicacion/casos_uso/comprobantes/listar_comprobantes_paciente_caso_uso';
+import { ObtenerComprobanteCasoUso } from '../../aplicacion/casos_uso/comprobantes/obtener_comprobante_caso_uso';
+import { AnularComprobanteCasoUso } from '../../aplicacion/casos_uso/comprobantes/anular_comprobante_caso_uso';
 import { CrearCitaCasoUso } from '../../aplicacion/casos_uso/reserva_citas/crear_cita_caso_uso';
 import { CrearReservaTemporalCasoUso } from '../../aplicacion/casos_uso/reserva_citas/crear_reserva_temporal_caso_uso';
 import { ListarCitasPacienteCasoUso } from '../../aplicacion/casos_uso/reserva_citas/listar_citas_paciente_caso_uso';
+import { ListarUsuariosCasoUso } from '../../aplicacion/casos_uso/usuarios/listar_usuarios_caso_uso';
 import { PagarCitaCasoUso } from '../../aplicacion/casos_uso/reserva_citas/pagar_cita_caso_uso';
 import { ValidacionReservaServicio } from '../../dominio/servicios/validacion_reserva_servicio';
 import { GeneradorIdUuid } from '../../compartido/generador_id';
+import { ComprobantePostgresRepositorio } from '../adaptadores/salida/base_datos_postgres/comprobante_postgres_repositorio';
+import { crearComprobantesControlador } from '../adaptadores/entrada/controladores_web/comprobantes_controlador';
+import { crearOdontologoControlador } from '../adaptadores/entrada/controladores_web/odontologo_controlador';
 import { crearChatControlador } from '../adaptadores/entrada/chat_ia_widget/chat_controlador';
 import { crearAgendaControlador } from '../adaptadores/entrada/controladores_web/agenda_controlador';
 import { crearAutenticacionControlador } from '../adaptadores/entrada/controladores_web/autenticacion_controlador';
@@ -78,7 +91,8 @@ export function crearServidor(): Express {
     pagoRepositorio,
     pasarelaPago,
     validacionReserva,
-    generadorId
+    generadorId,
+    usuarioRepositorio
   );
   const listarCitas = new ListarCitasPacienteCasoUso(citaRepositorio, pagoRepositorio);
   const pagarCita = new PagarCitaCasoUso(citaRepositorio, pagoRepositorio, pasarelaPago);
@@ -91,11 +105,22 @@ export function crearServidor(): Express {
   const crearUsuario = new CrearUsuarioCasoUso(usuarioRepositorio, hasheador, generadorId);
   const actualizarUsuario = new ActualizarUsuarioCasoUso(usuarioRepositorio, hasheador);
   const eliminarUsuario = new EliminarUsuarioCasoUso(usuarioRepositorio);
+  const listarUsuariosPorRol = new ListarUsuariosPorRolCasoUso(usuarioRepositorio);
+  const registrarPagoManual = new RegistrarPagoManualCasoUso(citaRepositorio, pagoRepositorio, generadorId);
+  const comprobanteRepositorio = new ComprobantePostgresRepositorio(pool);
+  const emitirComprobante = new EmitirComprobanteCasoUso(comprobanteRepositorio, pagoRepositorio);
+  const listarComprobantes = new ListarComprobantesCasoUso(comprobanteRepositorio);
+  const listarComprobantesPorPaciente = new ListarComprobantesPacienteCasoUso(comprobanteRepositorio);
+  const obtenerComprobante = new ObtenerComprobanteCasoUso(comprobanteRepositorio);
+  const anularComprobante = new AnularComprobanteCasoUso(comprobanteRepositorio);
   const obtenerConfiguracion = new ObtenerConfiguracionCasoUso(configuracionRepositorio);
   const actualizarConfiguracion = new ActualizarConfiguracionCasoUso(configuracionRepositorio);
   const listarAgenda = new ListarAgendaCasoUso(citaRepositorio);
+  const listarPacientesPorOdontologo = new ListarPacientesPorOdontologoCasoUso(usuarioRepositorio);
   const asignarCita = new AsignarCitaCasoUso(citaRepositorio);
   const agregarNota = new AgregarNotaCasoUso(citaRepositorio, notaRepositorio, generadorId);
+  const actualizarNota = new ActualizarNotaCasoUso(notaRepositorio);
+  const eliminarNota = new EliminarNotaCasoUso(notaRepositorio);
   const listarNotasCita = new ListarNotasCitaCasoUso(notaRepositorio);
   const listarNotasOdontologo = new ListarNotasOdontologoCasoUso(notaRepositorio);
   const listarCitasTodas = new ListarCitasTodasCasoUso(citaRepositorio);
@@ -112,7 +137,10 @@ export function crearServidor(): Express {
     res.json({ estado: 'ok' });
   });
 
-  app.use('/api', crearAutenticacionControlador(login, obtenerPerfil, crearUsuario, autenticar));
+  app.use(
+    '/api',
+    crearAutenticacionControlador(login, obtenerPerfil, crearUsuario, actualizarUsuario, autenticar)
+  );
   app.use(
     '/api',
     crearCitasControlador(
@@ -121,7 +149,8 @@ export function crearServidor(): Express {
       crearCita,
       listarCitas,
       pagarCita,
-      autenticar
+      autenticar,
+      listarUsuariosPorRol
     )
   );
   app.use(
@@ -141,22 +170,37 @@ export function crearServidor(): Express {
       listarAgenda,
       asignarCita,
       agregarNota,
+      actualizarNota,
+      eliminarNota,
       listarNotasCita,
       listarNotasOdontologo,
       autenticar
     )
   );
-  app.use(
-    '/api',
-    crearRecepcionControlador(
-      listarCitasTodas,
-      listarPagos,
-      confirmarPago,
-      rechazarPago,
-      autenticar
-    )
-  );
+  app.use('/api', crearRecepcionControlador(
+    listarUsuariosPorRol,
+    listarUsuarios,
+    crearUsuario,
+    actualizarUsuario,
+    eliminarUsuario,
+    crearCita,
+    listarCitasTodas,
+    listarPagos,
+    confirmarPago,
+    rechazarPago,
+    registrarPagoManual,
+    autenticar
+  ));
+  app.use('/api', crearComprobantesControlador(
+    emitirComprobante,
+    listarComprobantes,
+    listarComprobantesPorPaciente,
+    obtenerComprobante,
+    anularComprobante,
+    autenticar
+  ));
   app.use('/api', crearPagosControlador(validarPagoQr));
+  app.use('/api', crearOdontologoControlador(listarPacientesPorOdontologo, autenticar));
   app.use('/api', crearChatControlador(consultarDisponibilidad, responderConsulta));
 
   return app;

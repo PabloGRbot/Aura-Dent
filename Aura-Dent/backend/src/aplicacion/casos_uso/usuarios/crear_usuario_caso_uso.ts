@@ -29,6 +29,14 @@ export class CrearUsuarioCasoUso implements CrearUsuarioPuerto {
       throw new ErrorAplicacion('El DNI/CE es obligatorio', 'DATOS_INVALIDOS');
     }
 
+    if (solicitud.fechaNacimiento) {
+      const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
+      const nacimiento = new Date(solicitud.fechaNacimiento); nacimiento.setHours(0, 0, 0, 0);
+      if (nacimiento > hoy) {
+        throw new ErrorAplicacion('La fecha de nacimiento no puede ser futura', 'DATOS_INVALIDOS');
+      }
+    }
+
     const email = solicitud.email.trim().toLowerCase();
     if (await this.usuarioRepositorio.buscarPorEmail(email)) {
       throw new ErrorAplicacion('El email ya está registrado', 'EMAIL_DUPLICADO');
@@ -44,7 +52,8 @@ export class CrearUsuarioCasoUso implements CrearUsuarioPuerto {
       solicitud.dniCe.trim(),
       solicitud.fechaNacimiento,
       solicitud.alergias,
-      solicitud.rol
+      solicitud.rol,
+      solicitud.odontologoAsignadoId ?? null
     );
 
     try {

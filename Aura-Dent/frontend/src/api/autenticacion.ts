@@ -26,6 +26,23 @@ export function registrar(datos: DatosRegistro): Promise<SesionAutenticacion> {
   });
 }
 
+export interface DatosPerfil {
+  nombres: string;
+  apellidos: string;
+  email: string;
+  dniCe: string;
+  fechaNacimiento: string | null;
+  alergias: string | null;
+  password?: string;
+}
+
 export function obtenerPerfil(): Promise<Usuario> {
   return peticion<Usuario>('/api/usuarios/me');
+}
+
+export function actualizarMiPerfil(datos: DatosPerfil): Promise<Usuario> {
+  return peticion<Usuario>('/api/usuarios/me', {
+    method: 'PUT',
+    body: JSON.stringify(datos)
+  });
 }

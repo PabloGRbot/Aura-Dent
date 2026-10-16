@@ -40,7 +40,23 @@ export class CitaPostgresRepositorio implements CitaRepositorioPuerto {
     return rows.map((fila) => this.aDominio(fila));
   }
 
-  async listarParaAgenda(): Promise<CitaAgendaItem[]> {
+  async listarParaAgenda(odontologoId?: string): Promise<CitaAgendaItem[]> {
+    if (odontologoId) {
+      const { rows } = await this.pool.query<CitaAgendaFila>(
+        `SELECT c.*, u.nombres || ' ' || u.apellidos AS paciente_nombre, u.dni_ce AS paciente_dni
+          FROM citas c
+          JOIN usuarios u ON u.id = c.paciente_id
+          WHERE c.estado IN ('CONFIRMADA', 'ATENDIDA')
+            AND c.odontologo_id = $1
+          ORDER BY c.fecha ASC`,
+        [odontologoId]
+      );
+      return rows.map((fila) => ({
+        cita: this.aDominio(fila),
+        pacienteNombre: fila.paciente_nombre,
+        pacienteDni: fila.paciente_dni
+      }));
+    }
     const { rows } = await this.pool.query<CitaAgendaFila>(
       `SELECT c.*, u.nombres || ' ' || u.apellidos AS paciente_nombre, u.dni_ce AS paciente_dni
         FROM citas c

@@ -43,6 +43,9 @@ export class ActualizarUsuarioCasoUso implements ActualizarUsuarioPuerto {
     if (solicitud.alergias !== undefined) {
       usuario.alergias = solicitud.alergias;
     }
+    if (solicitud.odontologoAsignadoId !== undefined) {
+      usuario.odontologoAsignadoId = solicitud.odontologoAsignadoId;
+    }
     if (solicitud.rol !== undefined) {
       usuario.rol = solicitud.rol;
     }

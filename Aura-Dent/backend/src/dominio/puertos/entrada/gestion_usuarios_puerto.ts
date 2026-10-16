@@ -9,6 +9,7 @@ export interface SolicitudCrearUsuario {
   fechaNacimiento: Date | null;
   alergias: string | null;
   rol: Rol;
+  odontologoAsignadoId?: string | null;
 }
 
 export interface SolicitudActualizarUsuario {
@@ -20,10 +21,19 @@ export interface SolicitudActualizarUsuario {
   fechaNacimiento?: Date | null;
   alergias?: string | null;
   rol?: Rol;
+  odontologoAsignadoId?: string | null;
 }
 
 export interface ListarUsuariosPuerto {
   listar(): Promise<Usuario[]>;
+}
+
+export interface ListarUsuariosPorRolPuerto {
+  listarPorRol(rol: Rol): Promise<Usuario[]>;
+}
+
+export interface ListarPacientesPorOdontologoPuerto {
+  listarPorOdontologo(odontologoId: string): Promise<Usuario[]>;
 }
 
 export interface CrearUsuarioPuerto {

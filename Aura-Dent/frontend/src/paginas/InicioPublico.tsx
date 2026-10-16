@@ -1,22 +1,20 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { obtenerConfiguracion } from '../api/configuracion';
-import { CATALOGO_SERVICIOS } from '../catalogo_servicios';
 import { ChatIaWidget } from '../componentes/ChatIaWidget';
+import { ServiciosCarousel } from '../componentes/ServiciosCarousel';
 import { useAutenticacion } from '../contexto/ContextoAutenticacion';
 import { RUTA_INICIO_POR_ROL } from '../navegacion';
 
 const HORARIOS = [
-  { dia: 'Lunes a viernes', hora: '8:00 - 20:00' },
-  { dia: 'Sábados', hora: '8:00 - 14:00' },
+  { dia: 'Lunes a viernes', hora: '8:00 - 12:00 y 14:00 - 20:00' },
+  { dia: 'Sábados', hora: '8:00 - 12:00' },
   { dia: 'Domingos y feriados', hora: 'Cerrado' }
 ];
 
 const DIRECCION_POR_DEFECTO = 'Av. Los Álamos 123, Miraflores, Lima';
 const MAPA_POR_DEFECTO =
   'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3900.857953121273!2d-77.03035868465102!3d-12.123570791414038!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x9105c818cd4c5f2b%3A0x82c27f1a16cfa4ab!2sMiraflores%2C%20Lima%2C%20Per%C3%BA!5e0!3m2!1ses!2spe!4v1700000000000!5m2!1ses!2spe';
-
-const PASTELES = ['mint', 'sage', 'sky', 'cream', 'lilac', 'peach'];
 
 export function InicioPublico() {
   const { usuario } = useAutenticacion();
@@ -32,6 +30,17 @@ export function InicioPublico() {
 
   const direccion = config.direccion || DIRECCION_POR_DEFECTO;
   const mapa = config.ubicacion_mapa || MAPA_POR_DEFECTO;
+
+  const ahora = new Date();
+  const diaSemana = ahora.getDay(); // 0 = Domingo, 6 = Sábado
+  const esSabado = diaSemana === 6;
+  const esDomingo = diaSemana === 0;
+  const etiquetaDia = esDomingo ? 'Domingo' : esSabado ? 'Sábado' : 'Lunes a viernes';
+  const horarioDia = esDomingo
+    ? 'Cerrado'
+    : esSabado
+    ? '8:00 - 12:00'
+    : '8:00 - 12:00 y 14:00 - 20:00';
 
   return (
     <div className="landing">
@@ -74,8 +83,8 @@ export function InicioPublico() {
         </div>
         <div className="hero-tarjeta">
           <h3>Atención de hoy</h3>
-          <p>Lunes a viernes</p>
-          <strong>8:00 - 20:00</strong>
+          <p>{etiquetaDia}</p>
+          <strong>{horarioDia}</strong>
           <p>Av. Los Álamos 123, Miraflores</p>
           <p>(01) 555-0123</p>
         </div>
@@ -86,32 +95,7 @@ export function InicioPublico() {
           <h2>Nuestros servicios</h2>
           <p>Tratamientos con profesionales especializados y equipos modernos.</p>
         </div>
-        <div className="grid-servicios">
-          {CATALOGO_SERVICIOS.map((servicio, indice) => (
-            <article
-              key={servicio.nombre}
-              className={`servicio-card pastel-${PASTELES[indice % PASTELES.length]}`}
-              style={{ animationDelay: `${indice * 0.06}s` }}
-            >
-              <div className="servicio-imagen">
-                <img
-                  src={servicio.imagen}
-                  alt={`${servicio.nombre} en Aura-Dent`}
-                  loading="lazy"
-                  onError={(evento) => {
-                    evento.currentTarget.style.display = 'none';
-                  }}
-                />
-              </div>
-              <div className="servicio-cuerpo">
-                <span className="pill-tag">{servicio.categoria}</span>
-                <h3>{servicio.nombre}</h3>
-                <p>{servicio.detalle}</p>
-                <span className="servicio-meta">Duración estimada · {servicio.duracion}</span>
-              </div>
-            </article>
-          ))}
-        </div>
+        <ServiciosCarousel />
       </section>
 
       <section className="seccion" id="horarios">

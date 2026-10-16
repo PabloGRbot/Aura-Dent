@@ -1,6 +1,6 @@
 import { Pool } from 'pg';
 import { EstadoCita } from '../../../../dominio/modelos/cita_medica';
-import { EstadoPago, Pago } from '../../../../dominio/modelos/pago';
+import { EstadoPago, MetodoPago, Pago, TipoPago } from '../../../../dominio/modelos/pago';
 import {
   PagoDetalle,
   PagoRepositorioPuerto
@@ -12,7 +12,10 @@ interface PagoFila {
   monto: string;
   estado: EstadoPago;
   moneda: string;
+  metodo: MetodoPago;
+  tipo: TipoPago;
   referencia_qr: string | null;
+  pagado_en: Date | null;
 }
 
 interface PagoDetalleFila extends PagoFila {
@@ -42,6 +45,14 @@ export class PagoPostgresRepositorio implements PagoRepositorioPuerto {
     return rows.length > 0 ? this.aDominio(rows[0]) : null;
   }
 
+  async buscarPagosPorCitaId(citaId: string): Promise<Pago[]> {
+    const { rows } = await this.pool.query<PagoFila>(
+      'SELECT * FROM pagos WHERE cita_id = $1 ORDER BY pagado_en ASC NULLS FIRST, creado_en ASC',
+      [citaId]
+    );
+    return rows.map((fila) => this.aDominio(fila));
+  }
+
   async listar(): Promise<PagoDetalle[]> {
     const { rows } = await this.pool.query<PagoDetalleFila>(
       `SELECT p.*,
@@ -65,16 +76,26 @@ export class PagoPostgresRepositorio implements PagoRepositorioPuerto {
 
   async guardar(pago: Pago): Promise<void> {
     await this.pool.query(
-      `INSERT INTO pagos (id, cita_id, monto, estado, moneda, referencia_qr)
-        VALUES ($1, $2, $3, $4, $5, $6)`,
-      [pago.id, pago.citaId, pago.monto, pago.estado, pago.moneda, pago.referenciaQr]
+      `INSERT INTO pagos (id, cita_id, monto, estado, moneda, metodo, tipo, referencia_qr, pagado_en)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+      [
+        pago.id,
+        pago.citaId,
+        pago.monto,
+        pago.estado,
+        pago.moneda,
+        pago.metodo,
+        pago.tipo,
+        pago.referenciaQr,
+        pago.pagadoEn
+      ]
     );
   }
 
   async actualizar(pago: Pago): Promise<void> {
     await this.pool.query(
-      'UPDATE pagos SET monto = $1, estado = $2, referencia_qr = $3 WHERE id = $4',
-      [pago.monto, pago.estado, pago.referenciaQr, pago.id]
+      'UPDATE pagos SET monto = $1, estado = $2, referencia_qr = $3, pagado_en = $4 WHERE id = $5',
+      [pago.monto, pago.estado, pago.referenciaQr, pago.pagadoEn, pago.id]
     );
   }
 
@@ -85,7 +106,10 @@ export class PagoPostgresRepositorio implements PagoRepositorioPuerto {
       Number(fila.monto),
       fila.estado,
       fila.moneda,
-      fila.referencia_qr
+      fila.metodo,
+      fila.tipo,
+      fila.referencia_qr,
+      fila.pagado_en
     );
   }
 }

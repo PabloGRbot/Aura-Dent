@@ -9,7 +9,7 @@ export interface CitaAgendaItem {
 export interface CitaRepositorioPuerto {
   buscarPorId(id: string): Promise<CitaMedica | null>;
   listarPorPaciente(pacienteId: string): Promise<CitaMedica[]>;
-  listarParaAgenda(): Promise<CitaAgendaItem[]>;
+  listarParaAgenda(odontologoId?: string): Promise<CitaAgendaItem[]>;
   listarTodas(): Promise<CitaAgendaItem[]>;
   buscarPorOdontologoYFecha(odontologoId: string, fecha: Date): Promise<CitaMedica[]>;
   existeConflicto(odontologoId: string, fecha: Date, duracionMinutos: number): Promise<boolean>;

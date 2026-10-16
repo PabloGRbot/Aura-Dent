@@ -66,6 +66,8 @@ export interface NotaClinicaDetalle extends NotaClinica {
 }
 
 export type EstadoPago = 'PENDIENTE' | 'APROBADO' | 'RECHAZADO';
+export type MetodoPago = 'EFECTIVO' | 'TARJETA' | 'YAPE' | 'PLIN' | 'QR';
+export type TipoPago = 'ADELANTO' | 'SALDO' | 'UNICO';
 
 export interface Pago {
   id: string;
@@ -73,7 +75,10 @@ export interface Pago {
   monto: number;
   estado: EstadoPago;
   moneda: string;
+  metodo: MetodoPago;
+  tipo: TipoPago;
   referenciaQr: string | null;
+  pagadoEn: string | null;
 }
 
 export interface PagoDetalle extends Pago {
@@ -82,4 +87,25 @@ export interface PagoDetalle extends Pago {
   servicio: string | null;
   fechaCita: string;
   estadoCita: EstadoCita;
+}
+
+export type TipoComprobante = 'BOLETA' | 'FACTURA';
+export type EstadoComprobante = 'EMITIDO' | 'ANULADO';
+
+export interface Comprobante {
+  id: string;
+  pagoId: string;
+  citaId: string;
+  tipo: TipoComprobante;
+  serie: string;
+  correlativo: number;
+  rucCliente: string | null;
+  razonSocial: string | null;
+  subtotal: number;
+  igv: number;
+  total: number;
+  moneda: string;
+  estado: EstadoComprobante;
+  emitidoEn: string;
+  anuladoEn: string | null;
 }

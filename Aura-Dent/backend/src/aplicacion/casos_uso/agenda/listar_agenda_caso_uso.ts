@@ -7,7 +7,7 @@ import {
 export class ListarAgendaCasoUso implements ListarAgendaPuerto {
   constructor(private readonly citaRepositorio: CitaRepositorioPuerto) {}
 
-  listar(): Promise<CitaAgendaItem[]> {
-    return this.citaRepositorio.listarParaAgenda();
+  listar(odontologoId?: string): Promise<CitaAgendaItem[]> {
+    return this.citaRepositorio.listarParaAgenda(odontologoId);
   }
 }

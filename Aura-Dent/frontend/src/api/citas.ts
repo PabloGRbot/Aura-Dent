@@ -4,11 +4,12 @@ import { peticion } from './cliente';
 export function crearCita(
   fecha: string,
   servicio: string,
-  duracionMinutos = 30
+  duracionMinutos = 30,
+  odontologoId?: string | null
 ): Promise<Cita> {
   return peticion<Cita>('/api/citas', {
     method: 'POST',
-    body: JSON.stringify({ fecha, servicio, duracionMinutos })
+    body: JSON.stringify({ fecha, servicio, duracionMinutos, odontologoId })
   });
 }
 

@@ -23,3 +23,14 @@ export function crearNota(citaId: string, contenido: string): Promise<NotaClinic
 export function obtenerMisNotas(): Promise<NotaClinicaDetalle[]> {
   return peticion<NotaClinicaDetalle[]>('/api/citas/notas');
 }
+
+export function eliminarNota(notaId: string): Promise<void> {
+  return peticion<void>(`/api/citas/notas/${notaId}`, { method: 'DELETE' });
+}
+
+export function actualizarNota(notaId: string, contenido: string): Promise<void> {
+  return peticion<void>(`/api/citas/notas/${notaId}`, {
+    method: 'PUT',
+    body: JSON.stringify({ contenido })
+  });
+}

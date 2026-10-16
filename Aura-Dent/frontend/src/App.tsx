@@ -3,11 +3,14 @@ import { Navigate, Route, Routes } from 'react-router-dom';
 import { Layout } from './componentes/Layout';
 import { RutaProtegida } from './componentes/RutaProtegida';
 import { ConfiguracionAdmin } from './paginas/admin/Configuracion';
+import { ComprobantesAdmin } from './paginas/admin/Comprobantes';
 import { PagosAdmin } from './paginas/admin/Pagos';
 import { UsuariosAdmin } from './paginas/admin/Usuarios';
 import { HistorialPaciente } from './paginas/HistorialPaciente';
+import { ComprobantesPaciente } from './paginas/paciente/Comprobantes';
 import { InicioPublico } from './paginas/InicioPublico';
 import { Login } from './paginas/Login';
+import { MiCuenta } from './paginas/MiCuenta';
 import { MiAgenda } from './paginas/odontologo/MiAgenda';
 import { NotasClinicas } from './paginas/odontologo/NotasClinicas';
 import { PacientesOdontologo } from './paginas/odontologo/Pacientes';
@@ -17,6 +20,8 @@ import { Panel } from './paginas/Panel';
 import { Registro } from './paginas/Registro';
 import { AgendaRecepcion } from './paginas/recepcion/Agenda';
 import { PagosRecepcion } from './paginas/recepcion/Pagos';
+import { PacientesRecepcion } from './paginas/recepcion/Pacientes';
+import { ComprobantesRecepcion } from './paginas/recepcion/Comprobantes';
 import { Rol } from './tipos';
 
 function areaPrivada(rol: Rol, contenido: ReactNode) {
@@ -40,6 +45,11 @@ export function App() {
         path="/paciente/historial"
         element={areaPrivada('Paciente', <HistorialPaciente />)}
       />
+      <Route
+        path="/paciente/comprobantes"
+        element={areaPrivada('Paciente', <ComprobantesPaciente />)}
+      />
+      <Route path="/paciente/mi-cuenta" element={areaPrivada('Paciente', <MiCuenta />)} />
       <Route path="/paciente/:seccion" element={areaPrivada('Paciente', <PaginaPlaceholder />)} />
 
       <Route path="/odontologo" element={areaPrivada('Odontologo', <Panel />)} />
@@ -55,6 +65,7 @@ export function App() {
         path="/odontologo/pacientes"
         element={areaPrivada('Odontologo', <PacientesOdontologo />)}
       />
+      <Route path="/odontologo/mi-cuenta" element={areaPrivada('Odontologo', <MiCuenta />)} />
       <Route
         path="/odontologo/:seccion"
         element={areaPrivada('Odontologo', <PaginaPlaceholder />)}
@@ -66,6 +77,15 @@ export function App() {
         element={areaPrivada('Recepcion', <AgendaRecepcion />)}
       />
       <Route path="/recepcion/pagos" element={areaPrivada('Recepcion', <PagosRecepcion />)} />
+      <Route
+        path="/recepcion/pacientes"
+        element={areaPrivada('Recepcion', <PacientesRecepcion />)}
+      />
+      <Route
+        path="/recepcion/comprobantes"
+        element={areaPrivada('Recepcion', <ComprobantesRecepcion />)}
+      />
+      <Route path="/recepcion/mi-cuenta" element={areaPrivada('Recepcion', <MiCuenta />)} />
       <Route path="/recepcion/:seccion" element={areaPrivada('Recepcion', <PaginaPlaceholder />)} />
 
       <Route path="/administrador" element={areaPrivada('Administrador', <Panel />)} />
@@ -76,6 +96,10 @@ export function App() {
       <Route
         path="/administrador/pagos"
         element={areaPrivada('Administrador', <PagosAdmin />)}
+      />
+      <Route
+        path="/administrador/comprobantes"
+        element={areaPrivada('Administrador', <ComprobantesAdmin />)}
       />
       <Route
         path="/administrador/configuracion"

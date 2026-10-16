@@ -25,22 +25,29 @@ export const MENU_POR_ROL: Record<Rol, OpcionMenu[]> = {
   Paciente: [
     { etiqueta: 'Inicio', ruta: '/paciente' },
     { etiqueta: 'Mis citas', ruta: '/paciente/mis-citas' },
-    { etiqueta: 'Historial', ruta: '/paciente/historial' }
+    { etiqueta: 'Historial', ruta: '/paciente/historial' },
+    { etiqueta: 'Comprobantes', ruta: '/paciente/comprobantes' },
+    { etiqueta: 'Mi cuenta', ruta: '/paciente/mi-cuenta' }
   ],
   Odontologo: [
     { etiqueta: 'Inicio', ruta: '/odontologo' },
     { etiqueta: 'Mi agenda', ruta: '/odontologo/mi-agenda' },
     { etiqueta: 'Notas clínicas', ruta: '/odontologo/notas' },
-    { etiqueta: 'Pacientes', ruta: '/odontologo/pacientes' }
+    { etiqueta: 'Pacientes', ruta: '/odontologo/pacientes' },
+    { etiqueta: 'Mi cuenta', ruta: '/odontologo/mi-cuenta' }
   ],
   Recepcion: [
     { etiqueta: 'Inicio', ruta: '/recepcion' },
     { etiqueta: 'Agenda', ruta: '/recepcion/agenda' },
-    { etiqueta: 'Pagos', ruta: '/recepcion/pagos' }
+    { etiqueta: 'Pacientes', ruta: '/recepcion/pacientes' },
+    { etiqueta: 'Comprobantes', ruta: '/recepcion/comprobantes' },
+    { etiqueta: 'Pagos', ruta: '/recepcion/pagos' },
+    { etiqueta: 'Mi cuenta', ruta: '/recepcion/mi-cuenta' }
   ],
   Administrador: [
     { etiqueta: 'Inicio', ruta: '/administrador' },
     { etiqueta: 'Pagos y reportes', ruta: '/administrador/pagos' },
+    { etiqueta: 'Comprobantes', ruta: '/administrador/comprobantes' },
     { etiqueta: 'Usuarios', ruta: '/administrador/usuarios' },
     { etiqueta: 'Configuración', ruta: '/administrador/configuracion' }
   ]

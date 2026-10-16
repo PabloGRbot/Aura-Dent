@@ -29,6 +29,25 @@ export class NotaPostgresRepositorio implements NotaRepositorioPuerto {
     );
   }
 
+  async buscarPorId(id: string): Promise<NotaClinica | null> {
+    const { rows } = await this.pool.query<NotaFila>(
+      'SELECT * FROM notas_clinicas WHERE id = $1 LIMIT 1',
+      [id]
+    );
+    return rows.length > 0 ? this.aDominio(rows[0]) : null;
+  }
+
+  async actualizar(nota: NotaClinica): Promise<void> {
+    await this.pool.query(
+      `UPDATE notas_clinicas SET contenido = $1 WHERE id = $2`,
+      [nota.contenido, nota.id]
+    );
+  }
+
+  async eliminar(id: string): Promise<void> {
+    await this.pool.query('DELETE FROM notas_clinicas WHERE id = $1', [id]);
+  }
+
   async listarPorCita(citaId: string): Promise<NotaClinica[]> {
     const { rows } = await this.pool.query<NotaFila>(
       'SELECT * FROM notas_clinicas WHERE cita_id = $1 ORDER BY creado_en ASC',

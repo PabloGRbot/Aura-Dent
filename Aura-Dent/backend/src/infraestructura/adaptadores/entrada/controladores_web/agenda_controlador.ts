@@ -1,8 +1,10 @@
 import { Request, RequestHandler, Response, Router } from 'express';
 import { NotaClinica } from '../../../../dominio/modelos/nota_clinica';
 import {
+  ActualizarNotaPuerto,
   AgregarNotaPuerto,
   AsignarCitaPuerto,
+  EliminarNotaPuerto,
   ListarAgendaPuerto,
   ListarNotasCitaPuerto,
   ListarNotasOdontologoPuerto
@@ -50,16 +52,20 @@ export function crearAgendaControlador(
   listarAgenda: ListarAgendaPuerto,
   asignarCita: AsignarCitaPuerto,
   agregarNota: AgregarNotaPuerto,
+  actualizarNota: ActualizarNotaPuerto,
+  eliminarNota: EliminarNotaPuerto,
   listarNotasCita: ListarNotasCitaPuerto,
   listarNotasOdontologo: ListarNotasOdontologoPuerto,
   autenticar: RequestHandler
 ): Router {
   const router = Router();
-  router.use('/citas', autenticar, autorizar('Odontologo'));
+  router.use('/citas', autenticar, autorizar('Odontologo', 'Recepcion', 'Administrador'));
 
-  router.get('/citas/agenda', async (_req: Request, res: Response) => {
+  router.get('/citas/agenda', async (req: Request, res: Response) => {
     try {
-      const agenda = await listarAgenda.listar();
+      const { usuarioId, rol } = req as SolicitudAutenticada;
+      const odontologoId = rol === 'Odontologo' ? (usuarioId as string) : undefined;
+      const agenda = await listarAgenda.listar(odontologoId);
       res.json(agenda.map(aAgendaDto));
     } catch (error) {
       responderError(res, error);
@@ -110,6 +116,25 @@ export function crearAgendaControlador(
       const { usuarioId } = req as SolicitudAutenticada;
       const nota = await agregarNota.agregar(usuarioId as string, req.params.id, req.body.contenido);
       res.status(201).json(aNotaDto(nota));
+    } catch (error) {
+      responderError(res, error);
+    }
+  });
+
+  router.put('/citas/:id/notas', async (req: Request, res: Response) => {
+    try {
+      const { usuarioId } = req as SolicitudAutenticada;
+      const nota = await actualizarNota.actualizar(req.params.id, req.body.contenido);
+      res.status(201).json(aNotaDto(nota));
+    } catch (error) {
+      responderError(res, error);
+    }
+  });
+
+  router.delete('/citas/notas/:id', async (req: Request, res: Response) => {
+    try {
+      await eliminarNota.eliminar(req.params.id);
+      res.status(204).send();
     } catch (error) {
       responderError(res, error);
     }

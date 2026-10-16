@@ -4,7 +4,7 @@ import { CitaAgendaItem } from '../salida/cita_repositorio_puerto';
 import { NotaClinicaDetalle } from '../salida/nota_repositorio_puerto';
 
 export interface ListarAgendaPuerto {
-  listar(): Promise<CitaAgendaItem[]>;
+  listar(odontologoId?: string): Promise<CitaAgendaItem[]>;
 }
 
 export interface AsignarCitaPuerto {
@@ -13,6 +13,14 @@ export interface AsignarCitaPuerto {
 
 export interface AgregarNotaPuerto {
   agregar(odontologoId: string, citaId: string, contenido: string): Promise<NotaClinica>;
+}
+
+export interface ActualizarNotaPuerto {
+  actualizar(notaId: string, contenido: string): Promise<NotaClinica>;
+}
+
+export interface EliminarNotaPuerto {
+  eliminar(notaId: string): Promise<void>;
 }
 
 export interface ListarNotasCitaPuerto {
