@@ -82,6 +82,6 @@ export const CATALOGO_SERVICIOS: Servicio[] = [
   }
 ];
 
-export function formatearSoles(monto: number): string {
-  return `S/ ${monto.toFixed(2)}`;
+export function formatearSoles(monto: number | string): string {
+  return `S/ ${Number(monto).toFixed(2)}`;
 }

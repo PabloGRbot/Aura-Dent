@@ -100,6 +100,11 @@ const CONTENIDO: Record<Rol, ContenidoPanel> = {
         ruta: '/administrador/usuarios'
       },
       {
+        titulo: 'Comprobantes',
+        detalle: 'Consulta las boletas y facturas electrónicas emitidas.',
+        ruta: '/administrador/comprobantes'
+      },
+      {
         titulo: 'Configuración',
         detalle: 'Ajusta los datos del establecimiento y los parámetros de reserva.',
         ruta: '/administrador/configuracion'

@@ -2,6 +2,7 @@ import { FormEvent, useCallback, useEffect, useState } from 'react';
 import { anularComprobante, emitirComprobante, listarComprobantesRecepcion } from '../../api/recepcion';
 import { listarPagosRecepcion } from '../../api/recepcion';
 import { Comprobante, PagoDetalle } from '../../tipos';
+import { formatearSoles } from '../../catalogo_servicios';
 
 const TIPOS: { valor: 'BOLETA' | 'FACTURA'; etiqueta: string }[] = [
   { valor: 'BOLETA', etiqueta: 'Boleta' },
@@ -158,7 +159,7 @@ export function ComprobantesRecepcion() {
                   </td>
                   <td>{c.tipo}</td>
                   <td>{c.pagoId}</td>
-                  <td>S/ {c.total.toFixed(2)}</td>
+                  <td>{formatearSoles(c.total)}</td>
                   <td>
                     <span className={`estado ${c.estado.toLowerCase()}`}>
                       {c.estado === 'EMITIDO' ? 'Emitido' : 'Anulado'}
