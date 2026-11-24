@@ -1,25 +1,17 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { CATALOGO_SERVICIOS } from '../catalogo_servicios';
+import { ChevronLeft, ChevronRight, Clock } from 'lucide-react';
+import { CATALOGO_SERVICIOS, formatearSoles } from '../catalogo_servicios';
+import { IlustracionServicio } from './ui/IlustracionServicio';
 
-const GAP = 24;
-const AUTO_MS = 3000;
-const COPIAS = 3;
-const PASTELES = ['mint', 'sage', 'sky', 'cream', 'lilac', 'peach'] as const;
+const AUTO_MS = 4500;
 
 export function ServiciosCarousel() {
+  const [indice, setIndice] = useState(0);
   const [anchoVista, setAnchoVista] = useState<number>(
-    () => (typeof window !== 'undefined' ? window.innerWidth : 900)
+    () => (typeof window !== 'undefined' ? window.innerWidth : 1024)
   );
-  const [posicion, setPosicion] = useState<number>(0);
-  const [arrastrando, setArrastrando] = useState(false);
-  const [offsetArrastre, setOffsetArrastre] = useState(0);
-  const sinTransicionRef = useRef(false);
-  const inicioXRef = useRef(0);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-
   const n = CATALOGO_SERVICIOS.length;
-  const totalSlides = n * COPIAS;
-  const inicio = n;
 
   useEffect(() => {
     const onResize = () => setAnchoVista(window.innerWidth);
@@ -27,234 +19,129 @@ export function ServiciosCarousel() {
     return () => window.removeEventListener('resize', onResize);
   }, []);
 
-  const porVista = anchoVista <= 640 ? 1 : 3;
-  const paso = anchoVista > 0 ? (anchoVista + GAP) / porVista : 0;
-
-  const reducedMotion = useMemo(() => {
-    if (typeof window === 'undefined') return false;
-    return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  }, []);
-
-  const desplazamiento = -posicion * paso + offsetArrastre;
+  const porVista = anchoVista < 640 ? 1 : anchoVista < 1024 ? 2 : 3;
+  const maxIndice = Math.max(0, n - porVista);
 
   const detener = useCallback(() => {
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
       intervalRef.current = null;
     }
-    if (sinTransicionRef.current) sinTransicionRef.current = false;
   }, []);
 
   const reanudar = useCallback(() => {
-    if (reducedMotion) return;
     detener();
-    if (intervalRef.current) clearInterval(intervalRef.current);
-    intervalRef.current = setInterval(() => setPosicion((p) => p + 1), AUTO_MS);
-  }, [detener, reducedMotion]);
+    intervalRef.current = setInterval(() => {
+      setIndice((prev) => (prev >= maxIndice ? 0 : prev + 1));
+    }, AUTO_MS);
+  }, [detener, maxIndice]);
 
   useEffect(() => {
     reanudar();
     return () => detener();
   }, [reanudar, detener]);
 
-  // Reposicionamiento sin animación al cruzar los límites (rotación infinita real).
-  useEffect(() => {
-    const p = posicion;
-    if (p >= inicio * 2) {
-      sinTransicionRef.current = true;
-      setPosicion(p - n);
-    } else if (p < inicio) {
-      sinTransicionRef.current = true;
-      setPosicion(p + n);
-    }
-  }, [posicion, inicio, n]);
-
-  // Desactiva la bandera de transición tras el render instantáneo.
-  useEffect(() => {
-    if (sinTransicionRef.current && typeof window !== 'undefined') {
-      const id = window.requestAnimationFrame(() => {
-        sinTransicionRef.current = false;
-      });
-      return () => window.cancelAnimationFrame(id);
-    }
-  }, [posicion]);
-
-  const indiceReal = ((posicion - inicio) % n + n) % n;
-
-  const siguiente = useCallback(() => {
+  const siguiente = () => {
     detener();
-    setPosicion((p) => p + 1);
-    setOffsetArrastre(0);
-    setArrastrando(false);
+    setIndice((prev) => (prev >= maxIndice ? 0 : prev + 1));
     reanudar();
-  }, [detener, reanudar]);
+  };
 
-  const anterior = useCallback(() => {
+  const anterior = () => {
     detener();
-    setPosicion((p) => p - 1);
-    setOffsetArrastre(0);
-    setArrastrando(false);
+    setIndice((prev) => (prev <= 0 ? maxIndice : prev - 1));
     reanudar();
-  }, [detener, reanudar]);
+  };
 
-  const irA = useCallback(
-    (pagina: number) => {
-      if (pagina < 0 || pagina >= n) return;
-      detener();
-      setPosicion(inicio + pagina);
-      setOffsetArrastre(0);
-      setArrastrando(false);
-      reanudar();
-    },
-    [inicio, n, detener, reanudar]
-  );
-
-  const onPointerDown = useCallback(
-    (e: React.PointerEvent) => {
-      detener();
-      setArrastrando(true);
-      setOffsetArrastre(0);
-      inicioXRef.current = e.clientX;
-    },
-    [detener]
-  );
-
-  const onPointerMove = useCallback(
-    (e: React.PointerEvent) => {
-      if (!arrastrando) return;
-      setOffsetArrastre(e.clientX - inicioXRef.current);
-    },
-    [arrastrando]
-  );
-
-  const onPointerUp = useCallback(() => {
-    if (!arrastrando) return;
-    setArrastrando(false);
-    const umbral = paso * 0.25;
-    if (offsetArrastre > umbral) {
-      anterior();
-    } else if (offsetArrastre < -umbral) {
-      siguiente();
-    } else {
-      setOffsetArrastre(0);
-    }
-    reanudar();
-  }, [arrastrando, offsetArrastre, paso, anterior, siguiente, reanudar]);
-
-  const onPointerLeave = useCallback(() => {
-    if (!arrastrando) return;
-    setArrastrando(false);
-    setOffsetArrastre(0);
-    reanudar();
-  }, [arrastrando, reanudar]);
-
-  const slides = useMemo(
-    () =>
-      Array.from({ length: totalSlides }, (_, i) => ({
-        indice: i,
-        servicio: CATALOGO_SERVICIOS[i % n],
-      })),
-    [n, totalSlides]
-  );
+  const visibles = useMemo(() => {
+    const fin = Math.min(n, indice + porVista);
+    return CATALOGO_SERVICIOS.slice(indice, fin);
+  }, [indice, porVista, n]);
 
   return (
-    <section
-      className="carrusel-servicios"
+    <div
+      className="relative"
       role="region"
       aria-roledescription="carrusel"
       aria-label="Nuestros servicios"
+      onMouseEnter={detener}
+      onMouseLeave={reanudar}
     >
-      <div
-        className="carrusel-viewport"
-        onPointerDown={onPointerDown}
-        onPointerMove={onPointerMove}
-        onPointerUp={onPointerUp}
-        onPointerLeave={onPointerLeave}
-        onMouseEnter={detener}
-        onMouseLeave={reanudar}
-        onFocus={() => detener()}
-        onBlur={() => reanudar()}
-      >
-        <div
-          className="carrusel-track"
-          style={{
-            '--pv': porVista,
-            '--carrusel-gap': `${GAP}px`,
-            transition: sinTransicionRef.current ? 'none' : 'transform 0.6s cubic-bezier(0.22, 1, 0.36, 1)',
-            transform: `translateX(${desplazamiento}px)`,
-          } as unknown as React.CSSProperties}
-          onTransitionEnd={() => {
-            const p = posicion;
-            if (p >= inicio * 2) {
-              sinTransicionRef.current = true;
-              setPosicion(p - n);
-            } else if (p < inicio) {
-              sinTransicionRef.current = true;
-              setPosicion(p + n);
-            }
-          }}
-        >
-          {slides.map((item) => (
-            <article
-              key={`slide-${item.indice}-${item.servicio.nombre}`}
-              className={`carrusel-slide servicio-card pastel-${PASTELES[item.indice % PASTELES.length]}`}
-            >
-              <div className="servicio-imagen">
-                <img
-                  src={item.servicio.imagen}
-                  alt={`${item.servicio.nombre} en Aura-Dent`}
-                  loading="lazy"
-                  onError={(evento) => {
-                    evento.currentTarget.style.display = 'none';
-                  }}
-                />
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {visibles.map((servicio) => (
+          <article
+            key={servicio.nombre}
+            className="bg-soft-meadow rounded-card p-6 flex flex-col justify-between card-hover"
+          >
+            <div>
+              <div className="w-full h-36 rounded-card-sm bg-canvas mb-5 p-3 flex items-center justify-center overflow-hidden">
+                <IlustracionServicio categoria={servicio.categoria} nombre={servicio.nombre} />
               </div>
-              <div className="servicio-cuerpo">
-                <span className="pill-tag">{item.servicio.categoria}</span>
-                <h3>{item.servicio.nombre}</h3>
-                <p>{item.servicio.detalle}</p>
-                <span className="servicio-meta">Duración estimada · {item.servicio.duracion}</span>
+
+              <div className="flex items-center justify-between gap-2 mb-3">
+                <span className="badge badge-yellow">{servicio.categoria}</span>
+                <span className="font-inter font-semibold text-body-sm text-deep-ink">
+                  {formatearSoles(servicio.precio)}
+                </span>
               </div>
-            </article>
+
+              <h3 className="font-hedvig text-heading-sm font-bold text-deep-ink mb-2">
+                {servicio.nombre}
+              </h3>
+              <p className="font-inter text-body-sm text-slate-text leading-relaxed">
+                {servicio.detalle}
+              </p>
+            </div>
+
+            <div className="mt-5 pt-4 border-t border-deep-ink/10 flex items-center gap-2 font-inter text-caption text-slate-text uppercase tracking-wider">
+              <Clock size={14} />
+              <span>Duración estimada · {servicio.duracion}</span>
+            </div>
+          </article>
+        ))}
+      </div>
+
+      {/* Controles y paginación */}
+      <div className="mt-8 flex items-center justify-between gap-4">
+        <div className="flex items-center gap-2" role="tablist" aria-label="Páginas de servicios">
+          {Array.from({ length: maxIndice + 1 }, (_, i) => (
+            <button
+              key={i}
+              type="button"
+              role="tab"
+              aria-selected={i === indice}
+              aria-label={`Página ${i + 1}`}
+              onClick={() => {
+                detener();
+                setIndice(i);
+                reanudar();
+              }}
+              className={`h-2.5 rounded-pill transition-all duration-300 ${
+                i === indice ? 'w-8 bg-hi-yellow' : 'w-3 bg-slate-text/30 hover:bg-slate-text/60'
+              }`}
+            />
           ))}
         </div>
 
-        <button
-          className="carrusel-control carrusel-control--prev"
-          aria-label="Servicio anterior"
-          onClick={() => {
-            detener();
-            anterior();
-            reanudar();
-          }}
-        >
-          &#9664;
-        </button>
-        <button
-          className="carrusel-control carrusel-control--next"
-          aria-label="Siguiente servicio"
-          onClick={() => {
-            detener();
-            siguiente();
-            reanudar();
-          }}
-        >
-          &#9654;
-        </button>
-      </div>
-
-      <div className="carrusel-puntos" role="tablist" aria-label="Páginas de servicios">
-        {CATALOGO_SERVICIOS.map((_, p) => (
+        <div className="flex items-center gap-2">
           <button
-            key={p}
-            className={`punto${p === indiceReal ? ' activo' : ''}`}
-            role="tab"
-            aria-selected={p === indiceReal}
-            aria-label={`Ir al servicio ${p + 1} de ${n}`}
-            onClick={() => irA(p)}
-          />
-        ))}
+            type="button"
+            onClick={anterior}
+            aria-label="Servicio anterior"
+            className="w-10 h-10 rounded-full bg-soft-meadow text-deep-ink flex items-center justify-center hover:bg-hi-yellow transition-colors"
+          >
+            <ChevronLeft size={18} />
+          </button>
+          <button
+            type="button"
+            onClick={siguiente}
+            aria-label="Siguiente servicio"
+            className="w-10 h-10 rounded-full bg-deep-ink text-white flex items-center justify-center hover:brightness-125 transition-all"
+          >
+            <ChevronRight size={18} />
+          </button>
+        </div>
       </div>
-    </section>
+    </div>
   );
 }

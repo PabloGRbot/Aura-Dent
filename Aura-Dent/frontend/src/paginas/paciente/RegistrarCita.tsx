@@ -1,12 +1,15 @@
 import { useEffect, useState } from 'react';
-import { Selector } from '../../componentes/Selector';
+import { ArrowLeft, ArrowRight, Check, Clock, Sparkles } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { crearCita } from '../../api/citas';
-import { obtenerDisponibilidad, duracionServicio, hoyLima } from '../../api/gestion_citas';
-import { PoliticaCitas } from '../../componentes/PoliticaCitas';
+import { duracionServicio, hoyLima, obtenerDisponibilidad } from '../../api/gestion_citas';
 import { listarOdontologos, Odontologo } from '../../api/odontologos';
 import { ADELANTO_RESERVA, CATALOGO_SERVICIOS, formatearSoles } from '../../catalogo_servicios';
 import { CampoFecha } from '../../componentes/CampoFecha';
+import { PoliticaCitas } from '../../componentes/PoliticaCitas';
+import { Selector } from '../../componentes/Selector';
+
+const PASOS = ['Servicio', 'Odontólogo', 'Fecha', 'Hora'];
 
 export function RegistrarCita() {
   const navegar = useNavigate();
@@ -14,9 +17,9 @@ export function RegistrarCita() {
   const [dia, setDia] = useState('');
   const [hora, setHora] = useState('');
   const [servicio, setServicio] = useState(CATALOGO_SERVICIOS[0].nombre);
-  const [slots,setSlots]=useState<{hora:string;ocupado:boolean}[]>([]);
-  const [consultando,setConsultando]=useState(false);
-  const [politicaAceptada,setPoliticaAceptada]=useState(false);
+  const [slots, setSlots] = useState<{ hora: string; ocupado: boolean }[]>([]);
+  const [consultando, setConsultando] = useState(false);
+  const [politicaAceptada, setPoliticaAceptada] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [creando, setCreando] = useState(false);
   const [odontologos, setOdontologos] = useState<Odontologo[]>([]);
@@ -27,17 +30,36 @@ export function RegistrarCita() {
       .then(setOdontologos)
       .catch(() => undefined);
   }, []);
-  useEffect(()=>{
-    setHora('');setSlots([]);if(!dia||!odontologoId)return;
-    let activo=true;setConsultando(true);
-    obtenerDisponibilidad(odontologoId,dia,duracionServicio(servicio)).then(d=>{if(activo)setSlots(d.intervalos.map(i=>({hora:i.horaInicio,ocupado:!i.disponible})));})
-      .catch(e=>{if(activo)setError(e.message);}).finally(()=>{if(activo)setConsultando(false);});
-    return()=>{activo=false;};
-  },[dia,odontologoId,servicio]);
+
+  useEffect(() => {
+    setHora('');
+    setSlots([]);
+    if (!dia || !odontologoId) return;
+    let activo = true;
+    setConsultando(true);
+    obtenerDisponibilidad(odontologoId, dia, duracionServicio(servicio))
+      .then((d) => {
+        if (activo) {
+          setSlots(d.intervalos.map((i) => ({ hora: i.horaInicio, ocupado: !i.disponible })));
+        }
+      })
+      .catch((e) => {
+        if (activo) setError(e.message);
+      })
+      .finally(() => {
+        if (activo) setConsultando(false);
+      });
+    return () => {
+      activo = false;
+    };
+  }, [dia, odontologoId, servicio]);
 
   async function confirmarReserva(): Promise<void> {
     setError(null);
-    if(!politicaAceptada){setError('Acepta la política vigente antes de reservar.');return;}
+    if (!politicaAceptada) {
+      setError('Acepta la política vigente antes de reservar.');
+      return;
+    }
     if (!odontologoId) {
       setError('Selecciona un odontólogo.');
       return;
@@ -62,233 +84,135 @@ export function RegistrarCita() {
     }
   }
 
-  const generarSlots = () => slots;
-
   return (
-    <div className="reserva">
-      <style>{`
-        .reserva-pasos {
-          display: flex;
-          justify-content: space-between;
-          margin-bottom: 32px;
-          position: relative;
-        }
-        .reserva-pasos::before {
-          content: '';
-          position: absolute;
-          top: 15px;
-          left: 0;
-          right: 0;
-          height: 2px;
-          background: var(--gris-claro);
-          z-index: 1;
-        }
-        .paso {
-          position: relative;
-          z-index: 2;
-          background: #fff;
-          border: 2px solid var(--gris-claro);
-          width: 32px;
-          height: 32px;
-          border-radius: 50%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 14px;
-          font-weight: 600;
-          color: var(--gris);
-          transition: all 0.3s ease;
-        }
-        .paso.activo {
-          border-color: var(--verde);
-          background: var(--verde);
-          color: #fff;
-          box-shadow: 0 0 0 4px rgba(10, 57, 34, 0.1);
-        }
-        .reserva-contenedor-pasos {
-          position: relative;
-          min-height: 300px;
-          margin-bottom: 32px;
-        }
-        .paso-animado {
-          animation: slideIn 0.4s ease-out both;
-        }
-        @keyframes slideIn {
-          from { opacity: 0; transform: translateX(20px); }
-          to { opacity: 1; transform: translateX(0); }
-        }
-        .grid-servicios {
-          display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-          gap: 12px;
-          margin-top: 16px;
-        }
-        .tarjeta-servicio {
-          padding: 16px;
-          border: 1px solid var(--borde);
-          border-radius: var(--radio-suave);
-          cursor: pointer;
-          transition: all 0.2s ease;
-          background: #fff;
-          display: flex;
-          flex-direction: column;
-          gap: 4px;
-        }
-        .tarjeta-servicio:hover {
-          border-color: var(--verde);
-          background: var(--sage);
-        }
-        .tarjeta-servicio.seleccionado {
-          border-color: var(--verde);
-          background: var(--mint);
-          box-shadow: 0 0 0 2px var(--verde);
-        }
-        .servicio-nombre {
-          font-weight: 600;
-          color: var(--verde);
-        }
-        .servicio-precio {
-          font-size: 13px;
-          color: var(--gris);
-        }
-        .calendario-contenedor {
-          display: flex;
-          justify-content: center;
-          margin: 24px 0;
-        }
-        .input-fecha-moderno {
-          padding: 12px;
-          font-size: 16px;
-          border: 2px solid var(--borde);
-          border-radius: var(--radio-boton);
-          cursor: pointer;
-          transition: border-color 0.3s ease;
-        }
-        .input-fecha-moderno:focus {
-          border-color: var(--verde);
-        }
-        .grid-horarios-adaptado {
-          display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-          gap: 10px;
-          margin-top: 16px;
-        }
-        .slot-hora-adaptado {
-          padding: 10px;
-          border-radius: 8px;
-          border: 1px solid var(--borde);
-          background: #fff;
-          cursor: pointer;
-          font-weight: 500;
-          transition: all 0.2s ease;
-          text-align: center;
-          color: #000000;
-        }
-        .slot-hora-adaptado:hover:not(.ocupado) {
-          border-color: var(--verde);
-          background: var(--sage);
-        }
-        .slot-hora-adaptado.seleccionado {
-          background: var(--verde);
-          color: #fff;
-          border-color: var(--verde);
-        }
-        .slot-hora-adaptado.ocupado {
-          background: var(--gris-claro);
-          color: var(--gris);
-          cursor: not-allowed;
-          opacity: 0.6;
-          text-decoration: line-through;
-        }
-        .campo-odontologo {
-          margin-top: 20px;
-          display: flex;
-          flex-direction: column;
-          gap: 6px;
-        }
-        .campo-odontologo label {
-          font-weight: 600;
-          color: var(--grafito);
-          font-size: 14px;
-        }
-        .campo-odontologo select {
-          padding: 10px 12px;
-          border: 1px solid var(--borde);
-          border-radius: var(--radio-boton);
-          font-size: 14px;
-          background: #fff;
-          cursor: pointer;
-        }
-        .acciones-paso {
-          display: flex;
-          justify-content: space-between;
-          margin-top: 32px;
-          gap: 12px;
-        }
-        .paso-titulo {
-          text-align: center;
-          margin-bottom: 20px;
-          color: var(--verde);
-        }
-      `}</style>
+    <section className="max-w-3xl mx-auto animate-aparecer-arriba">
+      <header className="mb-8">
+        <span className="badge badge-yellow mb-3">Nueva reserva</span>
+        <h1 className="font-hedvig text-heading font-bold text-deep-ink">Reserva tu cita</h1>
+      </header>
 
-      <div className="reserva-pasos">
-        <div className={`paso ${paso >= 1 ? 'activo' : ''}`}>1</div>
-        <div className={`paso ${paso >= 2 ? 'activo' : ''}`}>2</div>
-        <div className={`paso ${paso >= 3 ? 'activo' : ''}`}>3</div>
-        <div className={`paso ${paso >= 4 ? 'activo' : ''}`}>4</div>
+      {/* Indicador de pasos Ditto */}
+      <div className="grid grid-cols-4 gap-2 mb-8">
+        {PASOS.map((etiqueta, idx) => {
+          const numero = idx + 1;
+          const activo = paso >= numero;
+          const actual = paso === numero;
+          return (
+            <button
+              key={etiqueta}
+              type="button"
+              onClick={() => numero < paso && setPaso(numero)}
+              disabled={numero > paso}
+              className={`flex items-center gap-2 rounded-pill px-3 py-2.5 font-inter text-body-sm font-medium transition-all ${
+                actual
+                  ? 'bg-hi-yellow text-deep-ink'
+                  : activo
+                  ? 'bg-deep-ink text-white cursor-pointer'
+                  : 'bg-soft-meadow text-slate-text cursor-not-allowed'
+              }`}
+            >
+              <span
+                className={`w-6 h-6 rounded-full flex items-center justify-center text-caption font-bold shrink-0 ${
+                  actual
+                    ? 'bg-deep-ink text-hi-yellow'
+                    : activo
+                    ? 'bg-hi-yellow text-deep-ink'
+                    : 'bg-canvas text-slate-text'
+                }`}
+              >
+                {paso > numero ? <Check size={13} /> : numero}
+              </span>
+              <span className="truncate hidden sm:inline">{etiqueta}</span>
+            </button>
+          );
+        })}
       </div>
 
-      <div className="reserva-contenedor-pasos">
+      {/* Contenedor del paso */}
+      <div className="bg-soft-meadow rounded-card p-6 sm:p-8 mb-6">
         {paso === 1 && (
-          <div className="paso-animado fade-in">
-            <h3 className="paso-titulo">Selecciona el servicio</h3>
-            <div className="grid-servicios">
-              {CATALOGO_SERVICIOS.map((item) => (
-                <div
-                  key={item.nombre}
-                  className={`tarjeta-servicio ${servicio === item.nombre ? 'seleccionado' : ''}`}
-                  onClick={() => {
-                    setServicio(item.nombre);
-                    setPaso(2);
-                  }}
-                >
-                  <span className="servicio-nombre">{item.nombre}</span>
-                  <span className="servicio-precio">{formatearSoles(item.precio)}</span>
-                </div>
-              ))}
+          <div className="animate-fade-in">
+            <h2 className="font-hedvig text-heading-sm font-bold text-deep-ink mb-5">
+              1. Selecciona el servicio
+            </h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {CATALOGO_SERVICIOS.map((item) => {
+                const seleccionado = servicio === item.nombre;
+                return (
+                  <button
+                    key={item.nombre}
+                    type="button"
+                    onClick={() => {
+                      setServicio(item.nombre);
+                      setPaso(2);
+                    }}
+                    className={`text-left rounded-card-sm p-4 transition-all border-2 flex flex-col justify-between gap-3 ${
+                      seleccionado
+                        ? 'bg-hi-yellow/35 border-deep-ink'
+                        : 'bg-canvas border-transparent hover:border-deep-ink/30'
+                    }`}
+                  >
+                    <div>
+                      <span className="eyebrow block mb-1">{item.categoria}</span>
+                      <p className="font-hedvig text-subheading font-bold text-deep-ink">
+                        {item.nombre}
+                      </p>
+                    </div>
+                    <div className="flex items-center justify-between font-inter text-body-sm">
+                      <span className="font-semibold text-deep-ink">
+                        {formatearSoles(item.precio)}
+                      </span>
+                      <span className="text-slate-text flex items-center gap-1 text-caption">
+                        <Clock size={12} /> {item.duracion}
+                      </span>
+                    </div>
+                  </button>
+                );
+              })}
             </div>
           </div>
         )}
 
         {paso === 2 && (
-          <div className="paso-animado fade-in">
-            <h3 className="paso-titulo">Selecciona el odontólogo</h3>
-            <label className="campo-odontologo">
-              Odontólogo
-              <Selector buscable onBuscar={q=>{listarOdontologos(q).then(setOdontologos).catch(e=>setError(e.message));}}
-                value={odontologoId ?? ''}
-                onChange={(e) => {
-                  setOdontologoId(e.target.value || null);
-                  if (e.target.value) setPaso(3);
-                }}
-                required
-              >
-                <option value="">Seleccionar odontólogo</option>
-                {odontologos.map((o) => (
-                  <option key={o.id} value={o.id}>
-                    {o.nombres} {o.apellidos}
-                  </option>
-                ))}
-              </Selector>
+          <div className="animate-fade-in">
+            <h2 className="font-hedvig text-heading-sm font-bold text-deep-ink mb-5">
+              2. Selecciona el odontólogo
+            </h2>
+            <label className="input-label">
+              Odontólogo especialista
+              <div className="mt-2">
+                <Selector
+                  buscable
+                  onBuscar={(q) => {
+                    listarOdontologos(q)
+                      .then(setOdontologos)
+                      .catch((e) => setError(e.message));
+                  }}
+                  value={odontologoId ?? ''}
+                  onChange={(e) => {
+                    setOdontologoId(e.target.value || null);
+                    if (e.target.value) setPaso(3);
+                  }}
+                  required
+                >
+                  <option value="">Seleccionar odontólogo</option>
+                  {odontologos.map((o) => (
+                    <option key={o.id} value={o.id}>
+                      {o.nombres} {o.apellidos}
+                    </option>
+                  ))}
+                </Selector>
+              </div>
             </label>
-            <div className="acciones-paso">
-              <button type="button" className="boton-secundario" onClick={() => setPaso(1)}>
-                Volver
+            <div className="mt-8 flex items-center justify-between gap-3">
+              <button type="button" className="btn-secondary" onClick={() => setPaso(1)}>
+                <ArrowLeft size={16} />
+                <span>Volver</span>
               </button>
               {odontologoId && (
-                <button type="button" className="boton-confirmar" onClick={() => setPaso(3)}>
-                  Siguiente
+                <button type="button" className="btn-primary" onClick={() => setPaso(3)}>
+                  <span>Siguiente</span>
+                  <ArrowRight size={16} />
                 </button>
               )}
             </div>
@@ -296,9 +220,11 @@ export function RegistrarCita() {
         )}
 
         {paso === 3 && (
-          <div className="paso-animado fade-in">
-            <h3 className="paso-titulo">Elige la fecha</h3>
-            <div className="calendario-contenedor">
+          <div className="animate-fade-in">
+            <h2 className="font-hedvig text-heading-sm font-bold text-deep-ink mb-5">
+              3. Elige la fecha
+            </h2>
+            <div className="flex justify-center my-4">
               <CampoFecha
                 value={dia}
                 min={hoyLima()}
@@ -308,13 +234,15 @@ export function RegistrarCita() {
                 }}
               />
             </div>
-            <div className="acciones-paso">
-              <button type="button" className="boton-secundario" onClick={() => setPaso(2)}>
-                Volver
+            <div className="mt-8 flex items-center justify-between gap-3">
+              <button type="button" className="btn-secondary" onClick={() => setPaso(2)}>
+                <ArrowLeft size={16} />
+                <span>Volver</span>
               </button>
               {dia && (
-                <button type="button" className="boton-confirmar" onClick={() => setPaso(4)}>
-                  Siguiente
+                <button type="button" className="btn-primary" onClick={() => setPaso(4)}>
+                  <span>Siguiente</span>
+                  <ArrowRight size={16} />
                 </button>
               )}
             </div>
@@ -322,51 +250,81 @@ export function RegistrarCita() {
         )}
 
         {paso === 4 && (
-          <div className="paso-animado fade-in">
-            <h3 className="paso-titulo">Elige la hora</h3>
-            {consultando&&<p role="status">Consultando horarios…</p>}
-            {!consultando&&generarSlots().length === 0 && (
-              <p className="aviso-sin-horarios" role="status">No hay horarios para este día. Vuelve y elige otra fecha.</p>
+          <div className="animate-fade-in">
+            <h2 className="font-hedvig text-heading-sm font-bold text-deep-ink mb-5">
+              4. Elige la hora
+            </h2>
+            {consultando && (
+              <p className="font-inter text-body-sm text-slate-text animate-pulse" role="status">
+                Consultando horarios disponibles…
+              </p>
             )}
-            <div className="grid-horarios-adaptado">
-              {generarSlots().map((slot) => (
-                <button
-                  key={slot.hora}
-                  type="button"
-                  className={`slot-hora-adaptado ${slot.ocupado ? 'ocupado' : ''} ${hora === slot.hora ? 'seleccionado' : ''}`}
-                  disabled={slot.ocupado}
-                  aria-pressed={hora === slot.hora}
-                  aria-label={`${slot.hora}${slot.ocupado ? ', no disponible' : ''}`}
-                  onClick={() => setHora(slot.hora)}
-                >
-                  {slot.hora}
-                </button>
-              ))}
+            {!consultando && slots.length === 0 && (
+              <p
+                className="bg-canvas rounded-card-sm p-4 font-inter text-body-sm text-slate-text"
+                role="status"
+              >
+                No hay horarios para este día. Vuelve y elige otra fecha.
+              </p>
+            )}
+            <div className="grid grid-cols-3 sm:grid-cols-5 gap-3 mt-4">
+              {slots.map((slot) => {
+                const seleccionado = hora === slot.hora;
+                return (
+                  <button
+                    key={slot.hora}
+                    type="button"
+                    disabled={slot.ocupado}
+                    aria-pressed={seleccionado}
+                    aria-label={`${slot.hora}${slot.ocupado ? ', no disponible' : ''}`}
+                    onClick={() => setHora(slot.hora)}
+                    className={`rounded-pill py-2.5 px-3 font-inter text-body-sm font-medium transition-all border ${
+                      slot.ocupado
+                        ? 'bg-soft-meadow text-slate-text/50 border-transparent line-through cursor-not-allowed'
+                        : seleccionado
+                        ? 'bg-hi-yellow text-deep-ink border-deep-ink font-semibold'
+                        : 'bg-canvas text-deep-ink border-deep-ink/20 hover:border-deep-ink'
+                    }`}
+                  >
+                    {slot.hora}
+                  </button>
+                );
+              })}
             </div>
-            <div className="acciones-paso">
-              <button type="button" className="boton-secundario" onClick={() => setPaso(3)}>
-                Volver
+
+            <div className="mt-8 flex items-center justify-between gap-3">
+              <button type="button" className="btn-secondary" onClick={() => setPaso(3)}>
+                <ArrowLeft size={16} />
+                <span>Volver</span>
               </button>
               <button
                 type="button"
-                className="boton-confirmar"
+                className="btn-primary disabled:opacity-50"
                 disabled={!hora || creando || !politicaAceptada || consultando}
                 onClick={confirmarReserva}
               >
-                {creando ? 'Registrando...' : 'Confirmar Reserva'}
+                <Sparkles size={16} />
+                <span>{creando ? 'Registrando...' : 'Confirmar reserva'}</span>
               </button>
             </div>
           </div>
         )}
       </div>
 
-      <p className="nota-pago">
-        Para garantizar la cita se abona un adelanto de {formatearSoles(ADELANTO_RESERVA)} mediante
-        QR/CIP (pago simulado).
-      </p>
-      <PoliticaCitas requerirAceptacion onAceptada={()=>setPoliticaAceptada(true)}/>
+      <div className="bg-canvas border border-deep-ink/10 rounded-card p-5 space-y-4">
+        <p className="font-inter text-body-sm text-slate-text">
+          Para garantizar la cita se abona un adelanto de{' '}
+          <strong className="text-deep-ink">{formatearSoles(ADELANTO_RESERVA)}</strong> mediante
+          QR/CIP (pago simulado).
+        </p>
+        <PoliticaCitas requerirAceptacion onAceptada={() => setPoliticaAceptada(true)} />
+      </div>
 
-      {error && <p className="error">{error}</p>}
-    </div>
+      {error && (
+        <p className="mt-4 bg-red-100 text-red-700 font-inter text-body-sm rounded-card-sm px-4 py-3">
+          {error}
+        </p>
+      )}
+    </section>
   );
 }

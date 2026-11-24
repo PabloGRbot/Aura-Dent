@@ -1,11 +1,26 @@
 import { useEffect, useState } from 'react';
+import {
+  ArrowUpRight,
+  Calendar,
+  ClipboardList,
+  CreditCard,
+  FileText,
+  History,
+  Settings,
+  Users
+} from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { peticion } from '../api/cliente';
 import { obtenerConfiguracion } from '../api/configuracion';
 import { ChatIaWidget } from '../componentes/ChatIaWidget';
 import { useAutenticacion } from '../contexto/ContextoAutenticacion';
 import { Rol } from '../tipos';
-interface ResumenPanel {usuarios:{rol:string;cantidad:number}[];citas:{estado:string;cantidad:number}[];pagos:{estado:string;cantidad:number}[]}
+
+interface ResumenPanel {
+  usuarios: { rol: string; cantidad: number }[];
+  citas: { estado: string; cantidad: number }[];
+  pagos: { estado: string; cantidad: number }[];
+}
 
 interface Accion {
   titulo: string;
@@ -118,108 +133,108 @@ const ETIQUETA_CONTEO: { rol: Rol; etiqueta: string }[] = [
   { rol: 'Administrador', etiqueta: 'Administradores' }
 ];
 
+function iconoAccion(titulo: string) {
+  const t = titulo.toLowerCase();
+  if (t.includes('cita') || t.includes('agenda')) return <Calendar size={20} />;
+  if (t.includes('historial')) return <History size={20} />;
+  if (t.includes('nota')) return <ClipboardList size={20} />;
+  if (t.includes('paciente') || t.includes('usuario')) return <Users size={20} />;
+  if (t.includes('pago')) return <CreditCard size={20} />;
+  if (t.includes('comprobante')) return <FileText size={20} />;
+  return <Settings size={20} />;
+}
+
+function TarjetaDato({ valor, etiqueta }: { valor: number; etiqueta: string }) {
+  return (
+    <article className="bg-soft-meadow rounded-card p-6 flex flex-col justify-between gap-2">
+      <span className="font-hedvig text-heading-lg font-bold text-deep-ink leading-none">
+        {valor}
+      </span>
+      <p className="font-inter text-body-sm text-slate-text">{etiqueta}</p>
+    </article>
+  );
+}
+
 function ResumenAdmin() {
-  const [conteo,setConteo]=useState<Record<string,number>>({});
+  const [conteo, setConteo] = useState<Record<string, number>>({});
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     peticion<ResumenPanel>('/api/panel/resumen')
-      .then(r=>setConteo(Object.fromEntries(r.usuarios.map(u=>[u.rol,u.cantidad]))))
+      .then((r) => setConteo(Object.fromEntries(r.usuarios.map((u) => [u.rol, u.cantidad]))))
       .catch((e) => setError((e as Error).message));
   }, []);
 
   if (error) {
-    return <p className="subtitulo">{error}</p>;
+    return <p className="font-inter text-body-sm text-red-600 mb-6">{error}</p>;
   }
 
   return (
-    <div className="tarjetas">
-      <article className="tarjeta-accion tarjeta-dato">
-        <h3>{Object.values(conteo).reduce((s,n)=>s+n,0)}</h3>
-        <p>Usuarios registrados</p>
-      </article>
+    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
+      <TarjetaDato
+        valor={Object.values(conteo).reduce((s, n) => s + n, 0)}
+        etiqueta="Usuarios registrados"
+      />
       {ETIQUETA_CONTEO.map(({ rol, etiqueta }) => (
-        <article key={rol} className="tarjeta-accion tarjeta-dato">
-          <h3>{conteo[rol] ?? 0}</h3>
-          <p>{etiqueta}</p>
-        </article>
+        <TarjetaDato key={rol} valor={conteo[rol] ?? 0} etiqueta={etiqueta} />
       ))}
     </div>
   );
 }
 
 function ResumenOdontologo({ usuarioId: _usuarioId }: { usuarioId: string }) {
-  const [conteo,setConteo]=useState<Record<string,number>>({});
+  const [conteo, setConteo] = useState<Record<string, number>>({});
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     peticion<ResumenPanel>('/api/panel/resumen')
-      .then(r=>setConteo(Object.fromEntries(r.citas.map(c=>[c.estado,c.cantidad]))))
+      .then((r) => setConteo(Object.fromEntries(r.citas.map((c) => [c.estado, c.cantidad]))))
       .catch((e) => setError((e as Error).message));
   }, []);
 
   if (error) {
-    return <p className="subtitulo">{error}</p>;
+    return <p className="font-inter text-body-sm text-red-600 mb-6">{error}</p>;
   }
 
   return (
-    <div className="tarjetas">
-      <article className="tarjeta-accion tarjeta-dato">
-        <h3>{Object.values(conteo).reduce((s,n)=>s+n,0)}</h3>
-        <p>Citas asignadas</p>
-      </article>
-      <article className="tarjeta-accion tarjeta-dato">
-        <h3>{conteo.CONFIRMADA ?? 0}</h3>
-        <p>Citas confirmadas</p>
-      </article>
-      <article className="tarjeta-accion tarjeta-dato">
-        <h3>{conteo.ATENDIDA ?? 0}</h3>
-        <p>Atenciones finalizadas</p>
-      </article>
+    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+      <TarjetaDato
+        valor={Object.values(conteo).reduce((s, n) => s + n, 0)}
+        etiqueta="Citas asignadas"
+      />
+      <TarjetaDato valor={conteo.CONFIRMADA ?? 0} etiqueta="Citas confirmadas" />
+      <TarjetaDato valor={conteo.ATENDIDA ?? 0} etiqueta="Atenciones finalizadas" />
     </div>
   );
 }
 
 function ResumenRecepcion() {
-  const [citas,setCitas]=useState<Record<string,number>>({});
-  const [pagos,setPagos]=useState<Record<string,number>>({});
+  const [citas, setCitas] = useState<Record<string, number>>({});
+  const [pagos, setPagos] = useState<Record<string, number>>({});
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     peticion<ResumenPanel>('/api/panel/resumen')
-      .then(r => {
-        setCitas(Object.fromEntries(r.citas.map(c=>[c.estado,c.cantidad])));
-        setPagos(Object.fromEntries(r.pagos.map(p=>[p.estado,p.cantidad])));
+      .then((r) => {
+        setCitas(Object.fromEntries(r.citas.map((c) => [c.estado, c.cantidad])));
+        setPagos(Object.fromEntries(r.pagos.map((p) => [p.estado, p.cantidad])));
       })
       .catch((e) => setError((e as Error).message));
   }, []);
 
   if (error) {
-    return <p className="subtitulo">{error}</p>;
+    return <p className="font-inter text-body-sm text-red-600 mb-6">{error}</p>;
   }
 
-  const porConfirmar=citas.PENDIENTE_PAGO ?? 0;
-  const confirmadas=citas.CONFIRMADA ?? 0;
-  const pagosPendientes=pagos.PENDIENTE ?? 0;
-
   return (
-    <div className="tarjetas">
-      <article className="tarjeta-accion tarjeta-dato">
-        <h3>{Object.values(citas).reduce((s,n)=>s+n,0)}</h3>
-        <p>Citas registradas</p>
-      </article>
-      <article className="tarjeta-accion tarjeta-dato">
-        <h3>{porConfirmar}</h3>
-        <p>Pendientes de pago</p>
-      </article>
-      <article className="tarjeta-accion tarjeta-dato">
-        <h3>{confirmadas}</h3>
-        <p>Citas confirmadas</p>
-      </article>
-      <article className="tarjeta-accion tarjeta-dato">
-        <h3>{pagosPendientes}</h3>
-        <p>Pagos por verificar</p>
-      </article>
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      <TarjetaDato
+        valor={Object.values(citas).reduce((s, n) => s + n, 0)}
+        etiqueta="Citas registradas"
+      />
+      <TarjetaDato valor={citas.PENDIENTE_PAGO ?? 0} etiqueta="Pendientes de pago" />
+      <TarjetaDato valor={citas.CONFIRMADA ?? 0} etiqueta="Citas confirmadas" />
+      <TarjetaDato valor={pagos.PENDIENTE ?? 0} etiqueta="Pagos por verificar" />
     </div>
   );
 }
@@ -241,35 +256,69 @@ export function Panel() {
   const panel = CONTENIDO[usuario.rol];
 
   return (
-    <section className="panel">
-      <h1>Hola, {usuario.nombres}</h1>
-      <p className="subtitulo">{panel.titulo}</p>
-      <p className="texto">{panel.descripcion}</p>
+    <section className="animate-aparecer-arriba">
+      <header className="mb-8">
+        <span className="badge badge-yellow mb-3">{panel.titulo}</span>
+        <h1 className="font-hedvig text-heading sm:text-heading-lg font-bold text-deep-ink">
+          Hola, {usuario.nombres}
+        </h1>
+        <p className="font-inter text-subheading text-slate-text mt-2 max-w-2xl">
+          {panel.descripcion}
+        </p>
+      </header>
 
       {usuario.rol === 'Administrador' && <ResumenAdmin />}
-
       {usuario.rol === 'Odontologo' && <ResumenOdontologo usuarioId={usuario.id} />}
-
       {usuario.rol === 'Recepcion' && <ResumenRecepcion />}
 
-      <div className="tarjetas">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {panel.acciones.map((accion) =>
           accion.ruta ? (
-            <Link key={accion.titulo} to={accion.ruta} className="tarjeta-accion">
-              <h3>{accion.titulo}</h3>
-              <p>{accion.detalle}</p>
+            <Link
+              key={accion.titulo}
+              to={accion.ruta}
+              className="group bg-soft-meadow rounded-card p-6 flex flex-col justify-between gap-6 card-hover"
+            >
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <span className="inline-flex items-center justify-center w-11 h-11 rounded-full bg-canvas text-deep-ink group-hover:bg-hi-yellow transition-colors">
+                    {iconoAccion(accion.titulo)}
+                  </span>
+                  <ArrowUpRight
+                    size={18}
+                    className="text-slate-text group-hover:text-deep-ink transition-colors"
+                  />
+                </div>
+                <h3 className="font-hedvig text-heading-sm font-bold text-deep-ink mb-1.5">
+                  {accion.titulo}
+                </h3>
+                <p className="font-inter text-body-sm text-slate-text leading-relaxed">
+                  {accion.detalle}
+                </p>
+              </div>
             </Link>
           ) : (
-            <article key={accion.titulo} className="tarjeta-accion">
-              <h3>{accion.titulo}</h3>
-              <p>{accion.detalle}</p>
+            <article
+              key={accion.titulo}
+              className="bg-soft-meadow rounded-card p-6 flex flex-col justify-between gap-4"
+            >
+              <div>
+                <span className="inline-flex items-center justify-center w-11 h-11 rounded-full bg-canvas text-deep-ink mb-4">
+                  {iconoAccion(accion.titulo)}
+                </span>
+                <h3 className="font-hedvig text-heading-sm font-bold text-deep-ink mb-1.5">
+                  {accion.titulo}
+                </h3>
+                <p className="font-inter text-body-sm text-slate-text leading-relaxed">
+                  {accion.detalle}
+                </p>
+              </div>
             </article>
           )
         )}
       </div>
 
       {usuario.rol === 'Paciente' && <ChatIaWidget />}
-
     </section>
   );
 }

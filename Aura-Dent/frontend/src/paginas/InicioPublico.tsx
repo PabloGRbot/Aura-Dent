@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
+import { Calendar, Mail, MapPin, Moon, Phone, Sparkles, Sun } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { obtenerConfiguracion } from '../api/configuracion';
 import { ChatIaWidget } from '../componentes/ChatIaWidget';
 import { ServiciosCarousel } from '../componentes/ServiciosCarousel';
+import { BlobDecorativo } from '../componentes/ui/BlobDecorativo';
 import { useAutenticacion } from '../contexto/ContextoAutenticacion';
 import { RUTA_INICIO_POR_ROL } from '../navegacion';
 
@@ -32,7 +34,7 @@ export function InicioPublico() {
   const mapa = config.ubicacion_mapa || MAPA_POR_DEFECTO;
 
   const ahora = new Date();
-  const diaSemana = ahora.getDay(); // 0 = Domingo, 6 = Sábado
+  const diaSemana = ahora.getDay();
   const esSabado = diaSemana === 6;
   const esDomingo = diaSemana === 0;
   const etiquetaDia = esDomingo ? 'Domingo' : esSabado ? 'Sábado' : 'Lunes a viernes';
@@ -43,155 +45,207 @@ export function InicioPublico() {
     : '8:00 - 12:00 y 14:00 - 20:00';
 
   return (
-    <div className="landing">
-      <header className="landing-header">
-        <span className="marca">Aura-Dent</span>
-        <nav className="landing-nav">
-          <a href="#servicios">Servicios</a>
-          <a href="#horarios">Horarios</a>
-          <a href="#contacto">Contacto</a>
-          <Link className="boton-primario" to={destinoPanel}>
-            {textoBoton}
+    <div className="min-h-screen bg-canvas text-deep-ink">
+      {/* Navbar estilo Ditto */}
+      <header className="sticky top-0 z-40 bg-soft-meadow/95 backdrop-blur-md border-b border-deep-ink/10">
+        <div className="max-w-page mx-auto px-6 h-20 flex items-center justify-between gap-4">
+          <Link to="/" className="flex items-center gap-2.5 font-hedvig text-heading-sm font-bold text-deep-ink">
+            <span className="inline-flex items-center justify-center w-9 h-9 rounded-full bg-hi-yellow text-deep-ink">
+              <Sparkles size={18} />
+            </span>
+            <span>Aura-Dent</span>
           </Link>
-        </nav>
-      </header>
 
-      <section className="hero">
-        <div className="hero-texto">
-          <span className="badge">Clínica dental en Miraflores</span>
-          <h1>
-            Tu sonrisa, cuidada por <span className="acento">especialistas</span>
-          </h1>
-          <p>
-            Reserva tu cita en línea, gestiona tus tratamientos y consulta a nuestro asistente
-            virtual. Tecnología y calidez para tu salud bucal.
-          </p>
-          <div className="hero-acciones">
-            <Link className="boton-primario" to={destinoPanel}>
-              {textoBoton}
-            </Link>
-            {usuario ? (
-              <a className="boton-secundario" href="#servicios">
-                Ver servicios
-              </a>
-            ) : (
-              <Link className="boton-secundario" to="/registro">
+          <nav className="hidden md:flex items-center gap-6 font-inter font-medium text-body text-deep-ink">
+            <a href="#servicios" className="hover:text-dental-teal transition-colors">Servicios</a>
+            <a href="#horarios" className="hover:text-dental-teal transition-colors">Horarios</a>
+            <a href="#contacto" className="hover:text-dental-teal transition-colors">Contacto</a>
+          </nav>
+
+          <div className="flex items-center gap-3">
+            {!usuario && (
+              <Link to="/registro" className="hidden sm:inline-flex btn-secondary btn-sm">
                 Crear cuenta
               </Link>
             )}
+            <Link className="btn-primary btn-sm" to={destinoPanel}>
+              {textoBoton}
+            </Link>
           </div>
         </div>
-        <div className="hero-tarjeta">
-          <h3>Atención de hoy</h3>
-          <p>{etiquetaDia}</p>
-          <strong>{horarioDia}</strong>
-          <p>Av. Los Álamos 123, Miraflores</p>
-          <p>(01) 555-0123</p>
+      </header>
+
+      {/* Hero con blobs orgánicos Ditto */}
+      <section className="relative overflow-hidden py-16 sm:py-24">
+        <BlobDecorativo />
+        <div className="relative z-10 max-w-page mx-auto px-6 grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
+          <div className="lg:col-span-7 animate-aparecer-arriba">
+            <span className="badge badge-yellow mb-5">Clínica dental en Miraflores</span>
+            <h1 className="font-hedvig text-heading-lg sm:text-display font-bold text-deep-ink text-balance mb-6">
+              Tu sonrisa, cuidada por especialistas.
+            </h1>
+            <p className="font-inter text-subheading text-slate-text max-w-xl mb-8 leading-relaxed">
+              Reserva tu cita en línea, gestiona tus tratamientos y consulta a nuestro asistente
+              virtual. Tecnología y calidez para tu salud bucal.
+            </p>
+            <div className="flex flex-wrap items-center gap-4">
+              <Link className="btn-primary" to={destinoPanel}>
+                <Calendar size={18} />
+                <span>{textoBoton}</span>
+              </Link>
+              {usuario ? (
+                <a className="btn-secondary" href="#servicios">
+                  Ver servicios
+                </a>
+              ) : (
+                <Link className="btn-secondary" to="/registro">
+                  Crear cuenta
+                </Link>
+              )}
+            </div>
+          </div>
+
+          <div className="lg:col-span-5 animate-aparecer-arriba delay-200">
+            <div className="bg-white rounded-card p-8 border border-deep-ink/10">
+              <span className="eyebrow block mb-2">Atención de hoy</span>
+              <h2 className="font-hedvig text-heading font-bold text-deep-ink mb-1">{etiquetaDia}</h2>
+              <p className="font-hedvig text-heading-sm text-dental-teal font-bold mb-6">
+                {horarioDia}
+              </p>
+
+              <div className="space-y-3 pt-5 border-t border-soft-meadow font-inter text-body-sm text-slate-text">
+                <div className="flex items-center gap-3">
+                  <MapPin size={17} className="text-deep-ink shrink-0" />
+                  <span>{direccion}</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <Phone size={17} className="text-deep-ink shrink-0" />
+                  <span>{config.telefono || '(01) 555-0123'}</span>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
-      <section className="seccion" id="servicios">
-        <div className="seccion-encabezado">
-          <h2>Nuestros servicios</h2>
-          <p>Tratamientos con profesionales especializados y equipos modernos.</p>
+      {/* Servicios */}
+      <section className="py-16 sm:py-20" id="servicios">
+        <div className="max-w-page mx-auto px-6">
+          <div className="mb-10 max-w-2xl">
+            <span className="eyebrow block mb-2">Especialidades</span>
+            <h2 className="font-hedvig text-heading sm:text-heading-lg font-bold text-deep-ink">
+              Nuestros servicios
+            </h2>
+            <p className="font-inter text-subheading text-slate-text mt-2">
+              Tratamientos con profesionales especializados y equipos modernos.
+            </p>
+          </div>
+          <ServiciosCarousel />
         </div>
-        <ServiciosCarousel />
       </section>
 
-      <section className="seccion" id="horarios">
-        <div className="seccion-encabezado">
-          <h2>Horarios y ubicación</h2>
-          <p>Te esperamos con cita previa para una mejor atención.</p>
-        </div>
-        <div className="info-grid">
-          <article className="info-card">
-            <h3>Horario de atención</h3>
-            <ul className="lista-horarios">
-              {HORARIOS.map((item, indice) => {
-                const cerrado = item.hora === 'Cerrado';
-                return (
-                  <li
-                    key={item.dia}
-                    className={`horario-card ${cerrado ? 'horario-card--cerrado' : 'horario-card--sol'}`}
-                    style={{ animationDelay: `${indice * 0.08}s` }}
-                  >
-                    {cerrado ? (
-                      <svg
-                        className="horario-icono"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="1.6"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        aria-hidden="true"
-                      >
-                        <path d="M12 3a9 9 0 0 1 9 9H3a9 9 0 0 1 9-9Z" />
-                        <path d="M12 12v6a2 2 0 0 0 4 0" />
-                      </svg>
-                    ) : (
-                      <svg
-                        className="horario-icono"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="1.6"
-                        strokeLinecap="round"
-                        aria-hidden="true"
-                      >
-                        <circle cx="12" cy="12" r="4.5" />
-                        <path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M19.1 4.9l-1.4 1.4M6.3 17.7l-1.4 1.4" />
-                      </svg>
-                    )}
-                    <span className="horario-dia">{item.dia}</span>
-                    <strong className="horario-hora">{item.hora}</strong>
-                  </li>
-                );
-              })}
-            </ul>
-          </article>
+      {/* Horarios y ubicación */}
+      <section className="py-16 sm:py-20" id="horarios">
+        <div className="max-w-page mx-auto px-6">
+          <div className="mb-10 max-w-2xl">
+            <span className="eyebrow block mb-2">Visítanos</span>
+            <h2 className="font-hedvig text-heading sm:text-heading-lg font-bold text-deep-ink">
+              Horarios y ubicación
+            </h2>
+            <p className="font-inter text-subheading text-slate-text mt-2">
+              Te esperamos con cita previa para una mejor atención.
+            </p>
+          </div>
 
-          <article className="info-card info-card--mapa">
-            <h3>Ubicación</h3>
-            <div className="mapa-contenedor-pequeno">
-              <iframe
-                className="mapa-iframe"
-                src={mapa}
-                loading="lazy"
-                referrerPolicy="no-referrer-when-downgrade"
-                allowFullScreen
-                title="Ubicación de Aura-Dent"
-              />
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <article className="bg-soft-meadow rounded-card p-6 sm:p-8">
+              <h3 className="font-hedvig text-heading-sm font-bold text-deep-ink mb-5">
+                Horario de atención
+              </h3>
+              <ul className="flex flex-col gap-3">
+                {HORARIOS.map((item) => {
+                  const cerrado = item.hora === 'Cerrado';
+                  return (
+                    <li
+                      key={item.dia}
+                      className={`rounded-card-sm p-4 flex items-center justify-between gap-4 ${
+                        cerrado ? 'bg-canvas/70 text-slate-text' : 'bg-canvas text-deep-ink'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <span
+                          className={`w-9 h-9 rounded-full flex items-center justify-center ${
+                            cerrado ? 'bg-soft-meadow text-slate-text' : 'bg-hi-yellow text-deep-ink'
+                          }`}
+                        >
+                          {cerrado ? <Moon size={16} /> : <Sun size={16} />}
+                        </span>
+                        <span className="font-inter font-medium text-body-sm">{item.dia}</span>
+                      </div>
+                      <strong className="font-inter font-semibold text-body-sm text-right">
+                        {item.hora}
+                      </strong>
+                    </li>
+                  );
+                })}
+              </ul>
+            </article>
+
+            <article className="bg-soft-meadow rounded-card p-6 sm:p-8 flex flex-col">
+              <h3 className="font-hedvig text-heading-sm font-bold text-deep-ink mb-5">
+                Ubicación
+              </h3>
+              <div className="flex-1 min-h-[260px] rounded-card-sm overflow-hidden bg-canvas">
+                <iframe
+                  className="w-full h-full min-h-[260px] border-0"
+                  src={mapa}
+                  loading="lazy"
+                  referrerPolicy="no-referrer-when-downgrade"
+                  allowFullScreen
+                  title="Ubicación de Aura-Dent"
+                />
+              </div>
+            </article>
+          </div>
+
+          <article className="bg-soft-meadow rounded-card p-6 sm:p-8" id="contacto">
+            <h3 className="font-hedvig text-heading-sm font-bold text-deep-ink mb-5">Contacto</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div>
+                <span className="eyebrow block mb-1">Dirección</span>
+                <p className="font-inter text-body-sm font-medium text-deep-ink flex items-start gap-2">
+                  <MapPin size={16} className="shrink-0 mt-0.5 text-dental-teal" />
+                  <span>{direccion}</span>
+                </p>
+              </div>
+              <div>
+                <span className="eyebrow block mb-1">Teléfono</span>
+                <p className="font-inter text-body-sm font-medium text-deep-ink flex items-center gap-2">
+                  <Phone size={16} className="shrink-0 text-dental-teal" />
+                  <span>{config.telefono || '(01) 555-0123'}</span>
+                </p>
+              </div>
+              <div>
+                <span className="eyebrow block mb-1">WhatsApp</span>
+                <p className="font-inter text-body-sm font-medium text-deep-ink">+51 987 654 321</p>
+              </div>
+              <div>
+                <span className="eyebrow block mb-1">Correo</span>
+                <p className="font-inter text-body-sm font-medium text-deep-ink flex items-center gap-2">
+                  <Mail size={16} className="shrink-0 text-dental-teal" />
+                  <span>{config.email_contacto || 'contacto@auradent.com'}</span>
+                </p>
+              </div>
             </div>
           </article>
         </div>
-
-        <article className="info-card info-card--contacto" id="contacto">
-          <h3>Contacto</h3>
-          <div className="contacto-grid">
-            <p>
-              <span className="contacto-etiqueta">Dirección</span>
-              {direccion}
-            </p>
-            <p>
-              <span className="contacto-etiqueta">Teléfono</span>
-              {config.telefono || '(01) 555-0123'}
-            </p>
-            <p>
-              <span className="contacto-etiqueta">WhatsApp</span>
-              +51 987 654 321
-            </p>
-            <p>
-              <span className="contacto-etiqueta">Correo</span>
-              {config.email_contacto || 'contacto@auradent.com'}
-            </p>
-          </div>
-        </article>
       </section>
 
-      <footer className="pie">
-        <span>Aura-Dent · Sistema de gestión de citas odontológicas</span>
-        <span>© 2026</span>
+      <footer className="border-t border-deep-ink/10 bg-soft-meadow/60 py-8">
+        <div className="max-w-page mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-2 font-inter text-body-sm text-slate-text">
+          <span>Aura-Dent · Sistema de gestión de citas odontológicas</span>
+          <span>© 2026</span>
+        </div>
       </footer>
 
       <ChatIaWidget />
