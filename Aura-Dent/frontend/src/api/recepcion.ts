@@ -7,6 +7,8 @@ export interface PacienteRecepcion {
   apellidos: string;
   email: string;
   dniCe: string;
+  fechaNacimiento?: string | null;
+  alergias?: string | null;
   rol: string;
   odontologoAsignadoId: string | null;
   passwordTemporal?: string;
@@ -31,16 +33,16 @@ export interface DatosCitaPresencial {
   odontologoId?: string | null;
 }
 
-export function listarCitasRecepcion(): Promise<CitaAgenda[]> {
-  return peticion<CitaAgenda[]>('/api/recepcion/citas');
+export function listarCitasRecepcion(pagina=1,q=''): Promise<CitaAgenda[]> {
+  return peticion<CitaAgenda[]>(`/api/recepcion/citas?pagina=${pagina}&q=${encodeURIComponent(q)}`);
 }
 
-export function listarPagosRecepcion(): Promise<PagoDetalle[]> {
-  return peticion<PagoDetalle[]>('/api/recepcion/pagos');
+export function listarPagosRecepcion(pagina=1,q=''): Promise<PagoDetalle[]> {
+  return peticion<PagoDetalle[]>(`/api/recepcion/pagos?pagina=${pagina}&q=${encodeURIComponent(q)}`);
 }
 
-export function listarPacientesRecepcion(): Promise<PacienteRecepcion[]> {
-  return peticion<PacienteRecepcion[]>('/api/recepcion/pacientes');
+export function listarPacientesRecepcion(pagina=1,q='',odontologoFiltro=''): Promise<PacienteRecepcion[]> {
+  return peticion<PacienteRecepcion[]>(`/api/recepcion/pacientes?pagina=${pagina}&q=${encodeURIComponent(q)}&odontologoFiltro=${encodeURIComponent(odontologoFiltro)}`);
 }
 
 export function crearPacienteRecepcion(datos: DatosPaciente): Promise<PacienteRecepcion & { passwordTemporal: string }> {
@@ -85,16 +87,16 @@ export interface SolicitudEmitirComprobante {
   razonSocial?: string | null;
 }
 
-export function listarComprobantesRecepcion(): Promise<Comprobante[]> {
-  return peticion<Comprobante[]>('/api/recepcion/comprobantes');
+export function listarComprobantesRecepcion(pagina=1): Promise<Comprobante[]> {
+  return peticion<Comprobante[]>(`/api/recepcion/comprobantes?pagina=${pagina}`);
 }
 
-export function listarMisComprobantes(): Promise<Comprobante[]> {
-  return peticion<Comprobante[]>('/api/comprobantes/mis-comprobantes');
+export function listarMisComprobantes(pagina=1): Promise<Comprobante[]> {
+  return peticion<Comprobante[]>(`/api/comprobantes/mis-comprobantes?pagina=${pagina}`);
 }
 
-export function listarComprobantesAdmin(): Promise<Comprobante[]> {
-  return peticion<Comprobante[]>('/api/comprobantes');
+export function listarComprobantesAdmin(pagina=1): Promise<Comprobante[]> {
+  return peticion<Comprobante[]>(`/api/comprobantes?pagina=${pagina}`);
 }
 
 export function obtenerComprobante(id: string): Promise<Comprobante> {

@@ -1,4 +1,7 @@
 import { FormEvent, useCallback, useEffect, useState } from 'react';
+import { Selector } from '../../componentes/Selector';
+import { Paginador } from '../../componentes/Paginador';
+import { useConfirmacion } from '../../componentes/Confirmacion';
 import { anularComprobante, emitirComprobante, listarComprobantesRecepcion } from '../../api/recepcion';
 import { listarPagosRecepcion } from '../../api/recepcion';
 import { Comprobante, PagoDetalle } from '../../tipos';
@@ -10,6 +13,8 @@ const TIPOS: { valor: 'BOLETA' | 'FACTURA'; etiqueta: string }[] = [
 ];
 
 export function ComprobantesRecepcion() {
+  const [pagina,setPagina]=useState(1);
+  const confirmar = useConfirmacion();
   const [comprobantes, setComprobantes] = useState<Comprobante[]>([]);
   const [pagos, setPagos] = useState<PagoDetalle[]>([]);
   const [cargando, setCargando] = useState(true);
@@ -28,7 +33,7 @@ export function ComprobantesRecepcion() {
 
   const cargar = useCallback(async () => {
     try {
-      const [cs, ps] = await Promise.all([listarComprobantesRecepcion(), listarPagosRecepcion()]);
+      const [cs, ps] = await Promise.all([listarComprobantesRecepcion(pagina), listarPagosRecepcion()]);
       setComprobantes(cs);
       setPagos(ps);
     } catch (e) {
@@ -36,13 +41,18 @@ export function ComprobantesRecepcion() {
     } finally {
       setCargando(false);
     }
-  }, []);
+  }, [pagina]);
 
   useEffect(() => {
     cargar();
   }, [cargar]);
 
   const pagosAprobados = pagos.filter((p) => p.estado === 'APROBADO');
+
+  const pagosConComprobanteEmitido = new Set(
+    comprobantes.filter((c) => c.estado === 'EMITIDO').map((c) => c.pagoId)
+  );
+  const pagosDisponibles = pagosAprobados.filter((p) => !pagosConComprobanteEmitido.has(p.id));
 
   const abrirEmitir = () => {
     setEmitirForm({
@@ -83,14 +93,15 @@ export function ComprobantesRecepcion() {
   };
 
   const manejarAnular = async (id: string) => {
-    if (!window.confirm('¿Anular este comprobante?')) return;
-    try {
-      await anularComprobante(id);
-      setMensaje('Comprobante anulado.');
-      await cargar();
-    } catch (e) {
-      setError((e as Error).message);
-    }
+    confirmar({ titulo: 'Anular comprobante', descripcion: '¿Anular el comprobante ' + (comprobantes.find((c) => c.id === id)?.serie ?? '') + '-' + String(comprobantes.find((c) => c.id === id)?.correlativo ?? '').padStart(6, '0') + '?', accion: 'Anular comprobante' }, async () => {
+      try {
+        await anularComprobante(id);
+        setMensaje('Comprobante anulado.');
+        await cargar();
+      } catch (e) {
+        setError((e as Error).message);
+      }
+    });
   };
 
   return (
@@ -113,10 +124,10 @@ export function ComprobantesRecepcion() {
 
       <label className="campo-busqueda">
         Pagos aprobados disponibles:
-        <select
+        <Selector
           className="select-pago"
           onChange={(e) => {
-            const pago = pagosAprobados.find((p) => p.id === e.target.value);
+            const pago = pagosDisponibles.find((p) => p.id === e.target.value);
             setEmitirForm((prev) => ({
               ...prev,
               pagoId: pago?.id ?? '',
@@ -125,12 +136,12 @@ export function ComprobantesRecepcion() {
           }}
         >
           <option value="">Seleccionar pago</option>
-          {pagosAprobados.map((p) => (
+          {pagosDisponibles.map((p) => (
             <option key={p.id} value={p.id}>
               {p.pacienteNombre} - S/ {p.monto.toFixed(2)} - {p.servicio ?? 'Consulta'}
             </option>
           ))}
-        </select>
+        </Selector>
       </label>
 
       {cargando ? (
@@ -199,10 +210,10 @@ export function ComprobantesRecepcion() {
             <div className="form-grid">
               <label>
                 Pago
-                <select
+                <Selector
                   value={emitirForm.pagoId}
                   onChange={(e) => {
-                    const pago = pagosAprobados.find((p) => p.id === e.target.value);
+                    const pago = pagosDisponibles.find((p) => p.id === e.target.value);
                     setEmitirForm((prev) => ({
                       ...prev,
                       pagoId: pago?.id ?? '',
@@ -212,16 +223,16 @@ export function ComprobantesRecepcion() {
                   required
                 >
                   <option value="">Seleccionar pago aprobado</option>
-                  {pagosAprobados.map((p) => (
+                  {pagosDisponibles.map((p) => (
                     <option key={p.id} value={p.id}>
                       {p.pacienteNombre} - S/ {p.monto.toFixed(2)}
                     </option>
                   ))}
-                </select>
+                </Selector>
               </label>
               <label>
                 Tipo
-                <select
+                <Selector
                   value={emitirForm.tipo}
                   onChange={(e) => setEmitirForm((prev) => ({ ...prev, tipo: e.target.value as 'BOLETA' | 'FACTURA' }))}
                 >
@@ -230,7 +241,7 @@ export function ComprobantesRecepcion() {
                       {t.etiqueta}
                     </option>
                   ))}
-                </select>
+                </Selector>
               </label>
               <label>
                 Serie
@@ -267,6 +278,7 @@ export function ComprobantesRecepcion() {
           </form>
         </div>
       )}
+      <Paginador pagina={pagina} cantidad={comprobantes.length} onCambiar={setPagina}/>
     </section>
   );
 }

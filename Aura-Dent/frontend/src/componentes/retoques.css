@@ -1,0 +1,111 @@
+/* Retoques locales: misma distribución, controles y colores de Aura-Dent. */
+.aura-selector, .aura-fecha-formulario { display: inline-block; position: relative; width: 100%; min-width: 0; vertical-align: middle; }
+.aura-selector-boton { display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; min-height: 44px; padding: 10px 12px; border: 1px solid var(--borde); border-radius: 10px; background: #fff; color: var(--grafito); text-align: left; font-size: 14px; }
+.aura-selector-boton > span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.aura-selector-boton:hover { background: var(--sage); border-color: var(--verde-claro); }
+.aura-selector-boton[aria-invalid="true"] { border-color: #b91c1c; }
+.campo-odontologo .aura-selector-boton { border-radius: var(--radio-boton); }
+.aura-select-nativo { position: absolute !important; width: 1px !important; height: 1px !important; padding: 0 !important; margin: 0 !important; opacity: 0 !important; clip-path: inset(50%); pointer-events: none; }
+.aura-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+.aura-selector-dialogo { position: fixed; inset: auto; margin: 0; padding: 8px; border: 1px solid var(--borde); border-radius: 12px; background: #fff; color: var(--verde); box-shadow: 0 10px 30px rgba(10,57,34,.16); max-width: calc(100vw - 24px); max-height: min(300px, calc(100dvh - 24px)); overflow: hidden; }
+.aura-selector-dialogo[open] { display: flex; flex-direction: column; }
+.aura-selector-dialogo::backdrop { background: rgba(10,57,34,.04); }
+.aura-selector-dialogo > input { display: block; width: 100%; font-size: 14px; padding: 8px 10px; margin-bottom: 6px; }
+.aura-selector-lista { min-height: 0; max-height: 200px; overflow-y: auto; }
+.aura-selector-lista > button { display: flex; justify-content: space-between; align-items: center; gap: 10px; width: 100%; border-radius: 8px; background: #fff; color: var(--grafito); padding: 10px; font-size: 14px; text-align: left; }
+.aura-selector-lista > button:hover, .aura-selector-lista > button:focus-visible { background: var(--sage); }
+.aura-selector-lista > button[aria-selected="true"] { background: var(--mint); color: var(--verde); font-weight: 600; }
+.aura-selector-lista > button:disabled { opacity: .45; cursor: not-allowed; }
+.aura-selector-lista > p { font-size: 13px; padding: 12px; color: var(--gris); }
+.aura-selector-cerrar { display: block; margin: 6px 0 0 auto; padding: 4px 10px; background: transparent; color: var(--verde); font-size: 12px; }
+.aura-fecha-navegacion { display: grid; grid-template-columns: minmax(0, 1fr) 80px; gap: 8px; margin-bottom: 10px; }
+.aura-fecha-navegacion input { width: 100%; padding: 6px; font-size: 13px; }
+.aura-fecha-navegacion .aura-selector-boton { min-height: 34px; font-size: 13px; padding: 6px 8px; }
+.aura-hora-dialogo { width: 280px; }
+.aura-hora-columnas { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px; }
+.aura-hora-columnas small { display: block; text-align: center; margin-bottom: 4px; }
+.aura-hora-columnas [role="group"] { max-height: 150px; overflow-y: auto; }
+.aura-hora-columnas button { width: 100%; padding: 6px 10px; background: #fff; color: var(--verde); font-size: 14px; }
+.aura-hora-columnas button:hover { background: var(--sage); }
+.aura-hora-columnas button[aria-pressed="true"] { background: var(--mint); font-weight: 700; }
+.aura-hora-dialogo .modal-acciones button { padding: 8px; font-size: 13px; }
+.cita-acciones { display: inline-flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+.cita-eliminar { padding: 8px 12px; font-size: 13px; border-color: #d9c6c2; color: #a33125; }
+.cita-eliminar:hover { background: var(--peach); }
+.cita-acciones button:disabled { opacity: .5; cursor: not-allowed; }
+.aura-campo-fecha { display: inline-block; max-width: 100%; }
+.aura-fecha-boton { display: inline-flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 46px; background: #fff; color: var(--verde); border: 2px solid var(--verde); border-radius: var(--radio-boton); padding: 10px 18px; font-weight: 500; box-shadow: 0 4px 12px rgba(10,57,34,.08); }
+.aura-fecha-boton:hover { background: var(--sage); }
+.aura-fecha-dialogo { position: fixed; margin: 0; width: 304px; max-width: calc(100vw - 24px); max-height: min(520px, calc(100dvh - 24px)); overflow-y: auto; padding: 16px; border: 1px solid var(--borde); border-radius: 16px; color: var(--verde); background: #fff; box-shadow: 0 12px 36px rgba(10,57,34,.18); font-size: 14px; }
+.aura-fecha-dialogo::backdrop { background: rgba(10,57,34,.05); }
+.aura-fecha-cabecera { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 12px; }
+.aura-fecha-cabecera strong { text-transform: capitalize; font-size: 14px; }
+.aura-fecha-cabecera button { background: var(--sage); color: var(--verde); padding: 0; width: 32px; height: 32px; font-size: 22px; border-radius: 50%; }
+.aura-fecha-semana, .aura-fecha-dias { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; text-align: center; }
+.aura-fecha-semana { color: var(--gris); font-size: 12px; margin-bottom: 6px; }
+.aura-fecha-dias button { border: 1px solid transparent; border-radius: 50%; padding: 0; min-height: 34px; background: transparent; color: var(--verde); font-size: 13px; }
+.aura-fecha-dias button:hover:not(:disabled) { background: var(--sage); }
+.aura-fecha-dias button[aria-current="date"] { border-color: var(--verde-claro); }
+.aura-fecha-dias button.aura-seleccionado { background: var(--verde); color: #fff; }
+.aura-fecha-dialogo button:disabled { opacity: .35; cursor: not-allowed; }
+.aura-fecha-pie { display: flex; align-items: center; justify-content: space-between; gap: 8px; border-top: 1px solid var(--borde); padding-top: 10px; margin-top: 12px; color: var(--gris); }
+.aura-fecha-pie small { font-size: 11px; }
+.aura-fecha-pie button { background: transparent; color: var(--verde); padding: 4px 8px; font-size: 12px; }
+.aura-confirmacion { border: 0; max-width: min(380px, calc(100vw - 32px)); max-height: calc(100dvh - 32px); overflow-y: auto; }
+.aura-confirmacion::backdrop { background: rgba(15,23,42,.55); }
+.aura-confirmacion-icono { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 50%; background: var(--peach); color: #a33125; font-weight: 700; margin-bottom: 12px; }
+.aura-confirmacion > p { margin-top: 12px; font-size: 14px; color: var(--grafito); overflow-wrap: anywhere; }
+.aura-confirmacion .modal-acciones { flex-wrap: wrap; }
+.aura-confirmacion .modal-acciones button { min-width: 120px; }
+.aura-confirmacion button:disabled, .reserva button:disabled, .modal button:disabled { opacity: .55; cursor: not-allowed; transform: none; }
+.reserva .slot-hora-adaptado[aria-pressed="true"]::after { content: ' ✓'; font-size: 12px; }
+.reserva .slot-hora-adaptado:focus-visible { outline: 2px solid var(--verde-claro); outline-offset: 3px; }
+.reserva .slot-hora-adaptado { min-height: 44px; }
+.reserva .aviso-sin-horarios { font-size: 14px; color: var(--gris); padding: 12px 0; }
+/* Avisos de bloque; las validaciones pequeñas de campos conservan su tamaño. */
+.panel p.error, .reserva > p.error, .modal p.error, .tarjeta > p.error { padding: 10px 12px; border: 1px solid #f1c4c4; border-radius: 10px; background: #fff4f4; font-size: 14px; overflow-wrap: anywhere; }
+.panel p.error::before, .reserva > p.error::before, .modal p.error::before, .tarjeta > p.error::before { content: '!'; display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; border: 1px solid currentColor; border-radius: 50%; margin-right: 8px; font-size: 11px; font-weight: 700; }
+p.exito { border: 1px solid #b6dec9; overflow-wrap: anywhere; white-space: pre-line; }
+p.exito::before { content: '✓'; margin-right: 8px; font-weight: 700; }
+@media (max-width: 480px) { .reserva .grid-horarios-adaptado { grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 8px; } .aura-fecha-boton { font-size: 1rem; } }
+.politica-citas { margin: 16px 0; padding: 12px; background: var(--sage, #f1f6f3); border-radius: 10px; font-size: .9rem; }
+.politica-citas summary { cursor: pointer; font-weight: 600; }
+.politica-citas label { display: flex; align-items: flex-start; gap: 8px; }
+.politica-citas input[type=checkbox] { width: auto; margin-top: 4px; }
+.aura-gestion-dialogo { border: 1px solid var(--borde); border-radius: 16px; padding: 24px; width: min(540px, calc(100vw - 32px)); max-height: 85vh; overflow: auto; color: var(--grafito); }
+.aura-gestion-dialogo::backdrop { background: #16342866; }
+.aura-gestion-dialogo label { display: block; margin: 12px 0; }
+.aura-gestion-dialogo textarea { width: 100%; min-height: 70px; }
+.aura-gestion-dialogo label.aura-editar-fecha { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; }
+.aura-gestion-dialogo { white-space: normal; text-align: left; }
+.aura-gestion-dialogo .aura-movimientos { display: grid; gap: 12px; margin: 16px 0; padding: 0; list-style: none; }
+.aura-gestion-dialogo .aura-movimiento { min-width: 0; padding: 12px 14px; border-left: 3px solid var(--verde-claro); border-radius: 8px; background: var(--sage); overflow-wrap: anywhere; font-size: 13px; line-height: 1.5; }
+.aura-gestion-dialogo .aura-movimiento > strong { display: block; font-size: 14px; }
+.aura-gestion-dialogo .aura-movimiento > time { display: block; margin-top: 4px; color: var(--gris); }
+.aura-gestion-dialogo .aura-movimiento p { margin: 4px 0 0; font-size: 13px; line-height: 1.5; }
+.aura-gestion-dialogo .aura-movimiento dl { display: grid; gap: 6px; margin: 10px 0 0; }
+.aura-gestion-dialogo .aura-movimiento dl > div { display: grid; grid-template-columns: 42px minmax(0, 1fr); gap: 8px; }
+.aura-gestion-dialogo .aura-movimiento dt { font-weight: 600; }
+.aura-gestion-dialogo .aura-movimiento dd { margin: 0; }
+.aura-paginador { display: flex; align-items: center; justify-content: center; gap: 12px; margin: 18px 0; }
+.estado.vencida, .estado.no_asistio, .badge-pago.anulado { background: #f1eeeb; color: #73594a; }
+.devoluciones { margin-top: 28px; }
+.modal-fondo.modal-pago-fondo { align-items: center; padding: 12px; }
+.modal.modal-pago { display: flex; flex-direction: column; max-height: calc(100dvh - 24px); padding: 20px; }
+.modal-pago-cuerpo { min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding-right: 4px; }
+.modal.modal-pago .subtitulo, .modal.modal-pago .dato-secundario, .modal.modal-pago .politica-citas { font-size: 13px; line-height: 1.45; }
+.modal-pago .subtitulo { margin: 8px 0; }
+.modal-pago .pago-condiciones { margin: 10px 0; text-align: left; font-size: 13px; line-height: 1.45; }
+.modal-pago .pago-condiciones > summary { cursor: pointer; color: var(--verde); font-weight: 600; }
+.modal-pago .qr-simulado { width: 136px; height: 136px; margin: 12px auto; }
+.modal-pago .modal-acciones { flex-shrink: 0; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--borde); background: #fff; }
+.modal-pago .modal-acciones button { min-height: 44px; padding: 10px 12px; font-size: 14px; }
+@media (max-height: 540px) { .modal.modal-pago { padding: 12px; } }
+.devoluciones h2 { font-size: 1.5rem; margin-bottom: 14px; }
+.mis-citas .cita-datos { min-width: 0; }
+@media (max-width: 700px) {
+  .mis-citas .cita, .devoluciones .cita { flex-direction: column; align-items: stretch; gap: 12px; }
+  .mis-citas .cita-estado { flex-wrap: wrap; justify-content: flex-start; gap: 10px; }
+  .mis-citas .cita-datos { width: 100%; }
+  .mis-citas .cita-acciones { flex-wrap: wrap; }
+}

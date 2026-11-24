@@ -3,6 +3,8 @@ export type EstadoCita =
   | 'PENDIENTE_PAGO'
   | 'CONFIRMADA'
   | 'CANCELADA'
+  | 'VENCIDA'
+  | 'NO_ASISTIO'
   | 'ATENDIDA';
 
 export class CitaMedica {
@@ -14,7 +16,12 @@ export class CitaMedica {
     public readonly duracionMinutos: number,
     public estado: EstadoCita,
     public pagoId: string | null = null,
-    public readonly servicio: string | null = null
+    public readonly servicio: string | null = null,
+    public readonly expiraEn: Date | null = null,
+    public readonly fechaOriginal: Date | null = null,
+    public readonly primerPagoEn: Date | null = null,
+    public readonly creadoEn: Date | null = null,
+    public readonly politicaVersion: string | null = null
   ) {}
 
   confirmar(pagoId: string): void {

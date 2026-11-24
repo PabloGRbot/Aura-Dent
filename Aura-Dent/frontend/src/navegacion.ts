@@ -2,7 +2,8 @@ import { Rol } from './tipos';
 
 export interface OpcionMenu {
   etiqueta: string;
-  ruta: string;
+  ruta?: string;
+  hijos?: OpcionMenu[];
 }
 
 export const RUTA_INICIO_POR_ROL: Record<Rol, string> = {
@@ -12,7 +13,7 @@ export const RUTA_INICIO_POR_ROL: Record<Rol, string> = {
   Administrador: '/administrador'
 };
 
-export const RUTA_RESERVA_PACIENTE = '/paciente/mis-citas';
+export const RUTA_RESERVA_PACIENTE = '/paciente/registrar-cita';
 
 export const NOMBRE_ROL: Record<Rol, string> = {
   Paciente: 'Paciente',
@@ -24,7 +25,13 @@ export const NOMBRE_ROL: Record<Rol, string> = {
 export const MENU_POR_ROL: Record<Rol, OpcionMenu[]> = {
   Paciente: [
     { etiqueta: 'Inicio', ruta: '/paciente' },
-    { etiqueta: 'Mis citas', ruta: '/paciente/mis-citas' },
+    {
+      etiqueta: 'Citas',
+      hijos: [
+        { etiqueta: 'Registrar cita', ruta: '/paciente/registrar-cita' },
+        { etiqueta: 'Mis citas', ruta: '/paciente/mis-citas' }
+      ]
+    },
     { etiqueta: 'Historial', ruta: '/paciente/historial' },
     { etiqueta: 'Comprobantes', ruta: '/paciente/comprobantes' },
     { etiqueta: 'Mi cuenta', ruta: '/paciente/mi-cuenta' }

@@ -1,4 +1,4 @@
-export type EstadoPago = 'PENDIENTE' | 'APROBADO' | 'RECHAZADO';
+export type EstadoPago = 'PENDIENTE' | 'APROBADO' | 'RECHAZADO' | 'ANULADO';
 export type MetodoPago = 'EFECTIVO' | 'TARJETA' | 'YAPE' | 'PLIN' | 'QR';
 export type TipoPago = 'ADELANTO' | 'SALDO' | 'UNICO';
 
@@ -16,9 +16,11 @@ export class Pago {
   ) {}
 
   aprobar(referenciaQr: string): void {
+    if (this.estado === 'APROBADO') return;
+    if (this.estado === 'ANULADO') throw new Error('Un pago anulado no se puede aprobar.');
     this.estado = 'APROBADO';
     this.referenciaQr = referenciaQr;
-    this.pagadoEn = new Date();
+    this.pagadoEn ??= new Date();
   }
 
   rechazar(): void {

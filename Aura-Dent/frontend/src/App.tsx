@@ -8,6 +8,7 @@ import { PagosAdmin } from './paginas/admin/Pagos';
 import { UsuariosAdmin } from './paginas/admin/Usuarios';
 import { HistorialPaciente } from './paginas/HistorialPaciente';
 import { ComprobantesPaciente } from './paginas/paciente/Comprobantes';
+import { RegistrarCita } from './paginas/paciente/RegistrarCita';
 import { InicioPublico } from './paginas/InicioPublico';
 import { Login } from './paginas/Login';
 import { MiCuenta } from './paginas/MiCuenta';
@@ -40,6 +41,10 @@ export function App() {
       <Route path="/registro" element={<Registro />} />
 
       <Route path="/paciente" element={areaPrivada('Paciente', <Panel />)} />
+      <Route
+        path="/paciente/registrar-cita"
+        element={areaPrivada('Paciente', <RegistrarCita />)}
+      />
       <Route path="/paciente/mis-citas" element={areaPrivada('Paciente', <MisCitas />)} />
       <Route
         path="/paciente/historial"

@@ -12,10 +12,16 @@ export class ConfirmarCitaCasoUso implements ConfirmarCitaPuerto {
     private readonly notificacion: NotificacionPuerto
   ) {}
 
-  async confirmarCita(reservaId: string, pagoId: string): Promise<CitaMedica> {
+  async confirmarCita(reservaId: string, pagoId: string, pacienteId?: string): Promise<CitaMedica> {
     const cita = await this.citaRepositorio.buscarPorId(reservaId);
     if (!cita) {
       throw new ErrorAplicacion('Reserva no encontrada', 'RESERVA_NO_ENCONTRADA');
+    }
+    if (pacienteId && cita.pacienteId !== pacienteId) {
+      throw new ErrorAplicacion('No puedes confirmar una reserva de otro paciente', 'NO_AUTORIZADO');
+    }
+    if (cita.expiraEn && cita.expiraEn.getTime() <= Date.now()) {
+      throw new ErrorAplicacion('La reserva venció. Debes elegir otro horario.', 'RESERVA_VENCIDA');
     }
 
     cita.confirmar(pagoId);

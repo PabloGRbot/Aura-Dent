@@ -3,18 +3,20 @@ import { listarMisComprobantes } from '../../api/recepcion';
 import { formatearSoles } from '../../catalogo_servicios';
 import { formatearFechaCorta } from '../../formato';
 import { Comprobante } from '../../tipos';
+import { Paginador } from '../../componentes/Paginador';
 
 export function ComprobantesPaciente() {
+  const [pagina,setPagina]=useState(1);
   const [comprobantes, setComprobantes] = useState<Comprobante[]>([]);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    listarMisComprobantes()
+    listarMisComprobantes(pagina)
       .then(setComprobantes)
       .catch((e) => setError((e as Error).message))
       .finally(() => setCargando(false));
-  }, []);
+  }, [pagina]);
 
   return (
     <section className="panel">
@@ -65,6 +67,7 @@ export function ComprobantesPaciente() {
           </table>
         </div>
       )}
+      <Paginador pagina={pagina} cantidad={comprobantes.length} onCambiar={setPagina}/>
     </section>
   );
 }

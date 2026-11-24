@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Selector } from '../../componentes/Selector';
+import { FechaFormulario } from '../../componentes/FechaFormulario';
 import {
   crearPacienteRecepcion,
   listarCitasRecepcion,
@@ -11,8 +13,16 @@ import { listarOdontologos, Odontologo } from '../../api/odontologos';
 import { ETIQUETA_ESTADO, formatearFecha } from '../../formato';
 import { CitaAgenda } from '../../tipos';
 import { CATALOGO_SERVICIOS, formatearSoles } from '../../catalogo_servicios';
+import { CampoFecha } from '../../componentes/CampoFecha';
+import { obtenerDisponibilidad, Intervalo, duracionServicio, hoyLima, aceptarPolitica, obtenerPolitica } from '../../api/gestion_citas';
+import { PoliticaCitas } from '../../componentes/PoliticaCitas';
+import { AccionesCita } from '../../componentes/AccionesCita';
+import { Paginador } from '../../componentes/Paginador';
 
 export function AgendaRecepcion() {
+  const [pagina,setPagina]=useState(1);
+  const [intervalos,setIntervalos]=useState<Intervalo[]>([]);
+  const [aceptaPolitica,setAceptaPolitica]=useState(false);
   const [citas, setCitas] = useState<CitaAgenda[]>([]);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -45,13 +55,16 @@ export function AgendaRecepcion() {
 
   const cargar = useCallback(async () => {
     try {
-      setCitas(await listarCitasRecepcion());
+      setCitas(await listarCitasRecepcion(pagina,busqueda));
     } catch (e) {
       setError((e as Error).message);
     } finally {
       setCargando(false);
     }
-  }, []);
+  }, [pagina,busqueda]);
+  useEffect(()=>{setIntervalos([]);setCitaForm(f=>({...f,hora:''}));if(!citaForm.odontologoId||!citaForm.fecha)return;let vivo=true;
+    obtenerDisponibilidad(citaForm.odontologoId,citaForm.fecha,duracionServicio(citaForm.servicio ?? 'Consulta general')).then(d=>{if(vivo)setIntervalos(d.intervalos);}).catch(e=>{if(vivo)setCitaError(e.message);});return()=>{vivo=false;};
+  },[citaForm.odontologoId,citaForm.fecha,citaForm.servicio]);
 
   useEffect(() => {
     cargar();
@@ -63,13 +76,10 @@ export function AgendaRecepcion() {
       .catch(() => undefined);
   }, [cargar]);
 
-  const hoyLocal = (): string => {
-    const ahora = new Date();
-    const desplazado = new Date(ahora.getTime() - ahora.getTimezoneOffset() * 60000);
-    return desplazado.toISOString().slice(0, 10);
-  };
+  const hoyLocal = hoyLima;
 
   const abrirCitaPresencial = () => {
+    setAceptaPolitica(false);
     setCitaForm({
       pacienteId: '',
       fecha: hoyLocal(),
@@ -100,6 +110,8 @@ export function AgendaRecepcion() {
     setMensajeExito(null);
     setCitaCargando(true);
     try {
+      if(!aceptaPolitica)throw new Error('Registra la aceptación de la política por el paciente.');
+      let pacienteId=citaForm.pacienteId;
       if (modoPaciente === 'nuevo') {
         const creado = await crearPacienteRecepcion({
           nombres: pacienteNuevo.nombres,
@@ -110,13 +122,17 @@ export function AgendaRecepcion() {
           alergias: pacienteNuevo.alergias ?? null
         });
         setCitaForm((prev) => ({ ...prev, pacienteId: creado.id }));
+        pacienteId=creado.id;
+        setModoPaciente('registrado');
         setMensajeExito(
           `Paciente creado. Contraseña temporal: ${creado.passwordTemporal}. Compártela con el paciente.`
         );
       }
+      const politica=await obtenerPolitica();await aceptarPolitica(politica.version,pacienteId);
       await crearCitaRecepcion({
         ...citaForm,
-        fecha: new Date(`${citaForm.fecha}T${citaForm.hora}`).toISOString()
+        pacienteId,
+        fecha: new Date(`${citaForm.fecha}T${citaForm.hora}:00-05:00`).toISOString()
       });
       setCitaPresencialAbierta(false);
       await cargar();
@@ -164,7 +180,7 @@ export function AgendaRecepcion() {
         Buscar por paciente o DNI/CE
         <input
           value={busqueda}
-          onChange={(e) => setBusqueda(e.target.value)}
+          onChange={(e) => {setPagina(1);setBusqueda(e.target.value);}}
           placeholder="Ej. Pablo o 00000004"
         />
       </label>
@@ -180,7 +196,7 @@ export function AgendaRecepcion() {
                 <th>Fecha</th>
                 <th>Servicio</th>
                 <th>Odontólogo</th>
-                <th>Estado</th>
+                <th>Estado</th><th>Acciones</th>
               </tr>
             </thead>
             <tbody>
@@ -198,6 +214,7 @@ export function AgendaRecepcion() {
                       {ETIQUETA_ESTADO[cita.estado]}
                     </span>
                   </td>
+                  <td><AccionesCita cita={cita} personal alCambiar={()=>void cargar()}/></td>
                 </tr>
               ))}
             </tbody>
@@ -216,34 +233,50 @@ export function AgendaRecepcion() {
             <h3>Nueva cita presencial</h3>
             {citaError && <p className="error">{citaError}</p>}
             {mensajeExito && <p className="exito">{mensajeExito}</p>}
-            <div className="modo-paciente" style={{ gridColumn: '1 / -1', marginBottom: 10 }}>
-              <strong>Tipo de paciente</strong>
-              <label style={{ display: 'inline-flex', alignItems: 'center', gap: 8, marginRight: 16 }}>
-                <input
-                  type="radio"
-                  name="modoPaciente"
-                  value="registrado"
-                  checked={modoPaciente === 'registrado'}
-                  onChange={() => setModoPaciente('registrado')}
-                />
-                Paciente registrado
-              </label>
-              <label style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-                <input
-                  type="radio"
-                  name="modoPaciente"
-                  value="nuevo"
-                  checked={modoPaciente === 'nuevo'}
-                  onChange={() => setModoPaciente('nuevo')}
-                />
-                Paciente nuevo (externo)
-              </label>
-            </div>
+            <fieldset className="modo-paciente">
+              <legend>Tipo de paciente</legend>
+              <div className="modo-paciente-opciones">
+                <label
+                  className={`opcion-paciente ${
+                    modoPaciente === 'registrado' ? 'activa' : ''
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="modoPaciente"
+                    value="registrado"
+                    checked={modoPaciente === 'registrado'}
+                    onChange={() => setModoPaciente('registrado')}
+                  />
+                  <span className="opcion-paciente-texto">
+                    <strong>Paciente registrado</strong>
+                    <span>Ya tiene una cuenta en el sistema</span>
+                  </span>
+                </label>
+                <label
+                  className={`opcion-paciente ${
+                    modoPaciente === 'nuevo' ? 'activa' : ''
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="modoPaciente"
+                    value="nuevo"
+                    checked={modoPaciente === 'nuevo'}
+                    onChange={() => setModoPaciente('nuevo')}
+                  />
+                  <span className="opcion-paciente-texto">
+                    <strong>Paciente nuevo (externo)</strong>
+                    <span>Registrar sus datos ahora</span>
+                  </span>
+                </label>
+              </div>
+            </fieldset>
             <div className="form-grid">
               {modoPaciente === 'registrado' ? (
                 <label className="ancho-completo">
                   Paciente
-                  <select
+                  <Selector buscable onBuscar={q=>{listarPacientesRecepcion(1,q).then(ps=>setPacientes(ps.map(p=>({...p})))).catch(e=>setCitaError(e.message));}}
                     value={citaForm.pacienteId}
                     onChange={(e) =>
                       setCitaForm((prev) => ({ ...prev, pacienteId: e.target.value }))
@@ -256,7 +289,7 @@ export function AgendaRecepcion() {
                         {p.nombres} {p.apellidos} ({p.dniCe})
                       </option>
                     ))}
-                  </select>
+                  </Selector>
                 </label>
               ) : (
                 <>
@@ -303,8 +336,7 @@ export function AgendaRecepcion() {
                   </label>
                   <label>
                     Fecha de nacimiento
-                    <input
-                      type="date"
+                    <FechaFormulario
                       value={pacienteNuevo.fechaNacimiento ?? ''}
                       onChange={(e) =>
                         setPacienteNuevo((prev) => ({
@@ -326,7 +358,7 @@ export function AgendaRecepcion() {
               )}
               <label className="ancho-completo">
                 Servicio
-                <select
+                <Selector
                   value={citaForm.servicio ?? ''}
                   onChange={(e) => setCitaForm((prev) => ({ ...prev, servicio: e.target.value }))}
                   required
@@ -336,48 +368,46 @@ export function AgendaRecepcion() {
                       {s.nombre} ({formatearSoles(s.precio)})
                     </option>
                   ))}
-                </select>
+                </Selector>
               </label>
               <label>
-                Odontólogo (opcional)
-                <select
+                Odontólogo
+                <Selector buscable required onBuscar={q=>{listarOdontologos(q).then(setOdontologos).catch(e=>setCitaError(e.message));}}
                   value={citaForm.odontologoId ?? ''}
                   onChange={(e) =>
                     setCitaForm((prev) => ({ ...prev, odontologoId: e.target.value || null }))
                   }
                 >
-                  <option value="">Sin asignar</option>
+                  <option value="">Seleccionar odontólogo</option>
                   {odontologos.map((o) => (
                     <option key={o.id} value={o.id}>
                       {o.nombres} {o.apellidos}
                     </option>
                   ))}
-                </select>
+                </Selector>
               </label>
               <label>
                 Fecha
-                <input
-                  type="date"
+                <CampoFecha
                   value={citaForm.fecha}
-                  onChange={(e) => setCitaForm((prev) => ({ ...prev, fecha: e.target.value }))}
-                  min={hoyLocal()}
-                  required
+                  onChange={(fecha) => setCitaForm((prev) => ({ ...prev, fecha }))}
+                  min={hoyLima()}
                 />
               </label>
               <label>
                 Hora
-                <input
-                  type="time"
-                  value={citaForm.hora}
-                  onChange={(e) => setCitaForm((prev) => ({ ...prev, hora: e.target.value }))}
+                <Selector
+                  value={citaForm.hora ?? ''}
+                  onChange={(e) => setCitaForm((prev) => ({ ...prev, hora:e.target.value }))}
                   required
-                />
+                ><option value="">Seleccionar horario disponible</option>{intervalos.filter(i=>i.disponible).map(i=><option key={i.horaInicio} value={i.horaInicio}>{i.horaInicio} – {i.horaFin}</option>)}</Selector>
               </label>
               <label>
                 Duración (min)
                 <input
                   type="number"
-                  value={citaForm.duracionMinutos}
+                  value={duracionServicio(citaForm.servicio ?? 'Consulta general')}
+                  readOnly
                   onChange={(e) =>
                     setCitaForm((prev) => ({ ...prev, duracionMinutos: Number(e.target.value) || 30 }))
                   }
@@ -385,6 +415,7 @@ export function AgendaRecepcion() {
                 />
               </label>
             </div>
+            <PoliticaCitas/><label><input type="checkbox" checked={aceptaPolitica} onChange={e=>setAceptaPolitica(e.target.checked)}/> El paciente ha leído y aceptado la política de citas y devoluciones.</label>
             <div className="modal-acciones">
               <button type="button" className="boton-secundario" onClick={cerrarCitaPresencial}>
                 Cancelar
@@ -396,6 +427,7 @@ export function AgendaRecepcion() {
           </form>
         </div>
       )}
+      <Paginador pagina={pagina} cantidad={citas.length} onCambiar={setPagina}/>
     </section>
   );
 }

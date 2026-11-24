@@ -9,7 +9,10 @@
     "start": "node dist/servidor_principal.js",
     "test": "jest",
     "test:watch": "jest --watch",
-    "db:setup": "ts-node --transpile-only scripts/preparar_bd.ts"
+    "db:setup": "ts-node --transpile-only scripts/preparar_bd.ts && npm run db:migrate",
+    "db:backup": "ts-node --transpile-only scripts/respaldar_bd.ts",
+    "db:benchmark": "ts-node --transpile-only scripts/medir_rendimiento.ts",
+    "db:migrate": "ts-node --transpile-only scripts/migrar_bd.ts"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

@@ -26,6 +26,10 @@ export interface EmitirComprobantePuerto {
   emitir(solicitud: SolicitudEmitirComprobante): Promise<Comprobante>;
 }
 
+export interface EmitirBoletaPorPagoPuerto {
+  emitirBoleta(pagoId: string, citaId: string): Promise<void>;
+}
+
 export interface AnularComprobantePuerto {
   anular(id: string): Promise<void>;
 }

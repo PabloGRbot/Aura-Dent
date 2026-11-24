@@ -12,8 +12,8 @@ export interface DatosUsuario {
   rol: Rol;
 }
 
-export function listarUsuarios(): Promise<Usuario[]> {
-  return peticion<Usuario[]>('/api/usuarios');
+export function listarUsuarios(pagina=1,q=''): Promise<Usuario[]> {
+  return peticion<Usuario[]>(`/api/usuarios?pagina=${pagina}&q=${encodeURIComponent(q)}`);
 }
 
 export function crearUsuario(datos: DatosUsuario): Promise<Usuario> {

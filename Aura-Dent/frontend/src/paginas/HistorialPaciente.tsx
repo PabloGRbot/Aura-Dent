@@ -2,34 +2,35 @@ import { useEffect, useMemo, useState } from 'react';
 import { obtenerMisCitas } from '../api/citas';
 import { formatearFecha } from '../formato';
 import { Cita } from '../tipos';
+import { Paginador } from '../componentes/Paginador';
 
 const ETIQUETA_ESTADO: Record<Cita['estado'], string> = {
   TEMPORAL: 'Temporal',
   PENDIENTE_PAGO: 'Pendiente de pago',
   CONFIRMADA: 'Confirmada',
   CANCELADA: 'Cancelada',
+  VENCIDA:'Vencida',NO_ASISTIO:'No asistió',
   ATENDIDA: 'Atendida'
 };
 
 export function HistorialPaciente() {
+  const [pagina,setPagina]=useState(1);
   const [citas, setCitas] = useState<Cita[]>([]);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    obtenerMisCitas()
+    obtenerMisCitas(pagina,'atendidas')
       .then(setCitas)
       .catch((e) => setError((e as Error).message))
       .finally(() => setCargando(false));
-  }, []);
+  }, [pagina]);
 
   const historial = useMemo(() => {
-    const ahora = Date.now();
     return citas
       .filter(
         (cita) =>
-          cita.estado === 'ATENDIDA' ||
-          (cita.estado !== 'TEMPORAL' && new Date(cita.fecha).getTime() < ahora)
+          cita.estado === 'ATENDIDA'
       )
       .sort((a, b) => new Date(b.fecha).getTime() - new Date(a.fecha).getTime());
   }, [citas]);
@@ -58,7 +59,7 @@ export function HistorialPaciente() {
           <div className="tarjetas">
             <article className="tarjeta-accion tarjeta-dato">
               <h3>{historial.length}</h3>
-              <p>Atenciones registradas</p>
+              <p>Atenciones en esta página</p>
             </article>
             <article className="tarjeta-accion tarjeta-dato">
               <h3>{serviciosDistintos}</h3>
@@ -92,6 +93,7 @@ export function HistorialPaciente() {
           </ol>
         </>
       )}
+      <Paginador pagina={pagina} cantidad={citas.length} onCambiar={setPagina}/>
     </section>
   );
 }

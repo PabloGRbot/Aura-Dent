@@ -19,7 +19,7 @@ export interface CrearReservaTemporalPuerto {
 }
 
 export interface ConfirmarCitaPuerto {
-  confirmarCita(reservaId: string, pagoId: string): Promise<CitaMedica>;
+  confirmarCita(reservaId: string, pagoId: string, pacienteId?: string): Promise<CitaMedica>;
 }
 
 export interface SolicitudCita {
@@ -45,9 +45,13 @@ export interface CitaConPago {
 }
 
 export interface ListarCitasPacientePuerto {
-  listarPorPaciente(pacienteId: string): Promise<CitaConPago[]>;
+  listarPorPaciente(pacienteId: string,pagina?:number,limite?:number,seccion?:string): Promise<CitaConPago[]>;
 }
 
 export interface PagarCitaPuerto {
   pagarCita(pacienteId: string, citaId: string, referenciaQr: string): Promise<CitaConPago>;
+}
+
+export interface EliminarReservaPuerto {
+  eliminar(pacienteId: string, citaId: string): Promise<void>;
 }

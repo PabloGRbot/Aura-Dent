@@ -2,6 +2,10 @@ const baseUrl = import.meta.env.VITE_API_URL ?? '';
 
 export const CLAVE_TOKEN = 'auradent_token';
 
+export class ErrorHttp extends Error {
+  constructor(mensaje: string, public readonly estado: number) { super(mensaje); }
+}
+
 export async function peticion<T>(ruta: string, opciones: RequestInit = {}): Promise<T> {
   const token = localStorage.getItem(CLAVE_TOKEN);
 
@@ -39,7 +43,7 @@ export async function peticion<T>(ruta: string, opciones: RequestInit = {}): Pro
     const mensaje =
       (datos as { mensaje?: string } | null)?.mensaje ??
       `Error del servidor (${respuesta.status}). Intenta nuevamente.`;
-    throw new Error(mensaje);
+    throw new ErrorHttp(mensaje, respuesta.status);
   }
 
   return datos as T;

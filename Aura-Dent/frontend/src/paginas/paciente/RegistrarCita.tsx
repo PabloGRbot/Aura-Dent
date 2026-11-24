@@ -1,79 +1,43 @@
-import { useCallback, useEffect, useState } from 'react';
-import { crearCita, obtenerMisCitas, pagarCita } from '../api/citas';
-import { listarOdontologos, Odontologo } from '../api/odontologos';
-import { ADELANTO_RESERVA, CATALOGO_SERVICIOS, formatearSoles } from '../catalogo_servicios';
-import { Cita } from '../tipos';
-import { QrSimulado } from './QrSimulado';
+import { useEffect, useState } from 'react';
+import { Selector } from '../../componentes/Selector';
+import { useNavigate } from 'react-router-dom';
+import { crearCita } from '../../api/citas';
+import { obtenerDisponibilidad, duracionServicio, hoyLima } from '../../api/gestion_citas';
+import { PoliticaCitas } from '../../componentes/PoliticaCitas';
+import { listarOdontologos, Odontologo } from '../../api/odontologos';
+import { ADELANTO_RESERVA, CATALOGO_SERVICIOS, formatearSoles } from '../../catalogo_servicios';
+import { CampoFecha } from '../../componentes/CampoFecha';
 
-function hoyLocal(): string {
-  const ahora = new Date();
-  const desplazado = new Date(ahora.getTime() - ahora.getTimezoneOffset() * 60000);
-  return desplazado.toISOString().slice(0, 10);
-}
-
-function formatear(fechaIso: string): string {
-  return new Date(fechaIso).toLocaleString('es-PE', {
-    weekday: 'long',
-    day: '2-digit',
-    month: 'long',
-    hour: '2-digit',
-    minute: '2-digit'
-  });
-}
-
-const ETIQUETA_ESTADO: Record<Cita['estado'], string> = {
-  TEMPORAL: 'Temporal',
-  PENDIENTE_PAGO: 'Pendiente de pago',
-  CONFIRMADA: 'Confirmada',
-  CANCELADA: 'Cancelada',
-  ATENDIDA: 'Atendida'
-};
-
-export function ReservaCitaPaciente() {
+export function RegistrarCita() {
+  const navegar = useNavigate();
   const [paso, setPaso] = useState(1);
   const [dia, setDia] = useState('');
   const [hora, setHora] = useState('');
   const [servicio, setServicio] = useState(CATALOGO_SERVICIOS[0].nombre);
-  const [citas, setCitas] = useState<Cita[]>([]);
-  const [cargando, setCargando] = useState(true);
+  const [slots,setSlots]=useState<{hora:string;ocupado:boolean}[]>([]);
+  const [consultando,setConsultando]=useState(false);
+  const [politicaAceptada,setPoliticaAceptada]=useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [mensaje, setMensaje] = useState<string | null>(null);
-  const [citaEnPago, setCitaEnPago] = useState<Cita | null>(null);
-  const [referencia, setReferencia] = useState('');
-  const [procesandoPago, setProcesandoPago] = useState(false);
+  const [creando, setCreando] = useState(false);
   const [odontologos, setOdontologos] = useState<Odontologo[]>([]);
   const [odontologoId, setOdontologoId] = useState<string | null>(null);
-
-  function abrirPago(cita: Cita) {
-    setCitaEnPago(cita);
-    setReferencia(cita.pago?.referenciaQr ?? '');
-    setError(null);
-    setMensaje(null);
-  }
-
-  const cargar = useCallback(async () => {
-    try {
-      setCitas(await obtenerMisCitas());
-    } catch (e) {
-      setError((e as Error).message);
-    } finally {
-      setCargando(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    cargar();
-  }, [cargar]);
 
   useEffect(() => {
     listarOdontologos()
       .then(setOdontologos)
       .catch(() => undefined);
   }, []);
+  useEffect(()=>{
+    setHora('');setSlots([]);if(!dia||!odontologoId)return;
+    let activo=true;setConsultando(true);
+    obtenerDisponibilidad(odontologoId,dia,duracionServicio(servicio)).then(d=>{if(activo)setSlots(d.intervalos.map(i=>({hora:i.horaInicio,ocupado:!i.disponible})));})
+      .catch(e=>{if(activo)setError(e.message);}).finally(()=>{if(activo)setConsultando(false);});
+    return()=>{activo=false;};
+  },[dia,odontologoId,servicio]);
 
-  async function confirmarReserva() {
+  async function confirmarReserva(): Promise<void> {
     setError(null);
-    setMensaje(null);
+    if(!politicaAceptada){setError('Acepta la política vigente antes de reservar.');return;}
     if (!odontologoId) {
       setError('Selecciona un odontólogo.');
       return;
@@ -82,84 +46,23 @@ export function ReservaCitaPaciente() {
       setError('Selecciona la fecha y la hora de tu cita.');
       return;
     }
+    setCreando(true);
     try {
       const cita = await crearCita(
-        new Date(`${dia}T${hora}`).toISOString(),
+        new Date(`${dia}T${hora}:00-05:00`).toISOString(),
         servicio,
-        30,
+        duracionServicio(servicio),
         odontologoId
       );
-      setDia('');
-      setHora('');
-      abrirPago(cita);
-      await cargar();
-      setPaso(1);
-    } catch (e) {
-      setError((e as Error).message);
-    }
-  }
-
-  async function confirmarPago() {
-    if (!citaEnPago?.pago) {
-      return;
-    }
-    setProcesandoPago(true);
-    setError(null);
-    try {
-      await pagarCita(citaEnPago.id, referencia.trim());
-      const resumen = `¡Reserva Confirmada!\\n\\nServicio: ${citaEnPago.servicio}\\nFecha: ${formatear(citaEnPago.fecha)}\\nEstado: Confirmada`;
-      setCitaEnPago(null);
-      setMensaje(resumen);
-      await cargar();
+      navegar('/paciente/mis-citas', { state: { pagarCitaId: cita.id } });
     } catch (e) {
       setError((e as Error).message);
     } finally {
-      setProcesandoPago(false);
+      setCreando(false);
     }
   }
 
-  const generarSlots = () => {
-    const slots: { hora: string; ocupado: boolean }[] = [];
-    const fecha = new Date(`${dia}T00:00:00`);
-    const diaSemana = fecha.getDay(); // 0 = Domingo, 6 = Sábado
-
-    // Domingos y feriados: cerrado
-    if (diaSemana === 0) return slots;
-
-    const rangos = [
-      { inicio: '08:00', fin: '12:00' }
-    ];
-    // Lunes a viernes: tarde adicional 14:00 - 20:00
-    if (diaSemana !== 6) {
-      rangos.push({ inicio: '14:00', fin: '20:00' });
-    }
-
-    for (const { inicio, fin } of rangos) {
-      let actual = new Date(`${dia}T${inicio}`);
-      const finFecha = new Date(`${dia}T${fin}`);
-      while (actual < finFecha) {
-        const horaStr = actual.toTimeString().slice(0, 5);
-        const ocupado = citas.some(c => {
-          if (c.estado === 'CANCELADA') return false;
-          const fechaCita = new Date(c.fecha);
-          const diaCita = new Date(
-            fechaCita.getTime() - fechaCita.getTimezoneOffset() * 60000
-          )
-            .toISOString()
-            .slice(0, 10);
-          const horaCita = new Date(
-            fechaCita.getTime() - fechaCita.getTimezoneOffset() * 60000
-          )
-            .toISOString()
-            .slice(11, 16);
-          return diaCita === dia && horaCita === horaStr;
-        });
-        slots.push({ hora: horaStr, ocupado });
-        actual.setMinutes(actual.getMinutes() + 30);
-      }
-    }
-    return slots;
-  };
+  const generarSlots = () => slots;
 
   return (
     <div className="reserva">
@@ -342,10 +245,13 @@ export function ReservaCitaPaciente() {
             <h3 className="paso-titulo">Selecciona el servicio</h3>
             <div className="grid-servicios">
               {CATALOGO_SERVICIOS.map((item) => (
-                <div 
-                  key={item.nombre} 
+                <div
+                  key={item.nombre}
                   className={`tarjeta-servicio ${servicio === item.nombre ? 'seleccionado' : ''}`}
-                  onClick={() => { setServicio(item.nombre); setPaso(2); }}
+                  onClick={() => {
+                    setServicio(item.nombre);
+                    setPaso(2);
+                  }}
                 >
                   <span className="servicio-nombre">{item.nombre}</span>
                   <span className="servicio-precio">{formatearSoles(item.precio)}</span>
@@ -360,7 +266,7 @@ export function ReservaCitaPaciente() {
             <h3 className="paso-titulo">Selecciona el odontólogo</h3>
             <label className="campo-odontologo">
               Odontólogo
-              <select
+              <Selector buscable onBuscar={q=>{listarOdontologos(q).then(setOdontologos).catch(e=>setError(e.message));}}
                 value={odontologoId ?? ''}
                 onChange={(e) => {
                   setOdontologoId(e.target.value || null);
@@ -374,11 +280,17 @@ export function ReservaCitaPaciente() {
                     {o.nombres} {o.apellidos}
                   </option>
                 ))}
-              </select>
+              </Selector>
             </label>
             <div className="acciones-paso">
-              <button type="button" className="boton-secundario" onClick={() => setPaso(1)}>Volver</button>
-              {odontologoId && <button type="button" className="boton-confirmar" onClick={() => setPaso(3)}>Siguiente</button>}
+              <button type="button" className="boton-secundario" onClick={() => setPaso(1)}>
+                Volver
+              </button>
+              {odontologoId && (
+                <button type="button" className="boton-confirmar" onClick={() => setPaso(3)}>
+                  Siguiente
+                </button>
+              )}
             </div>
           </div>
         )}
@@ -387,33 +299,24 @@ export function ReservaCitaPaciente() {
           <div className="paso-animado fade-in">
             <h3 className="paso-titulo">Elige la fecha</h3>
             <div className="calendario-contenedor">
-              <input
-                type="date"
-                className="input-fecha-moderno"
-                style={{
-                  border: '2px solid var(--verde)',
-                  padding: '12px 20px',
-                  borderRadius: 'var(--radio-boton)',
-                  fontSize: '1.1rem',
-                  fontFamily: 'inherit',
-                  cursor: 'pointer',
-                  outline: 'none',
-                  boxShadow: '0 4px 12px rgba(10, 57, 34, 0.1)',
-                  appearance: 'none',
-                  WebkitAppearance: 'none'
-                }}
+              <CampoFecha
                 value={dia}
-                min={hoyLocal()}
-                onChange={(evento) => {
-                  setDia(evento.target.value);
-                  if (evento.target.value) setPaso(4);
+                min={hoyLima()}
+                onChange={(fecha) => {
+                  setDia(fecha);
+                  if (fecha) setPaso(4);
                 }}
-                required
               />
             </div>
             <div className="acciones-paso">
-              <button type="button" className="boton-secundario" onClick={() => setPaso(2)}>Volver</button>
-              {dia && <button type="button" className="boton-confirmar" onClick={() => setPaso(4)}>Siguiente</button>}
+              <button type="button" className="boton-secundario" onClick={() => setPaso(2)}>
+                Volver
+              </button>
+              {dia && (
+                <button type="button" className="boton-confirmar" onClick={() => setPaso(4)}>
+                  Siguiente
+                </button>
+              )}
             </div>
           </div>
         )}
@@ -421,6 +324,10 @@ export function ReservaCitaPaciente() {
         {paso === 4 && (
           <div className="paso-animado fade-in">
             <h3 className="paso-titulo">Elige la hora</h3>
+            {consultando&&<p role="status">Consultando horarios…</p>}
+            {!consultando&&generarSlots().length === 0 && (
+              <p className="aviso-sin-horarios" role="status">No hay horarios para este día. Vuelve y elige otra fecha.</p>
+            )}
             <div className="grid-horarios-adaptado">
               {generarSlots().map((slot) => (
                 <button
@@ -428,6 +335,8 @@ export function ReservaCitaPaciente() {
                   type="button"
                   className={`slot-hora-adaptado ${slot.ocupado ? 'ocupado' : ''} ${hora === slot.hora ? 'seleccionado' : ''}`}
                   disabled={slot.ocupado}
+                  aria-pressed={hora === slot.hora}
+                  aria-label={`${slot.hora}${slot.ocupado ? ', no disponible' : ''}`}
                   onClick={() => setHora(slot.hora)}
                 >
                   {slot.hora}
@@ -435,14 +344,16 @@ export function ReservaCitaPaciente() {
               ))}
             </div>
             <div className="acciones-paso">
-              <button type="button" className="boton-secundario" onClick={() => setPaso(3)}>Volver</button>
-              <button 
-                type="button" 
-                className="boton-confirmar" 
-                disabled={!hora}
+              <button type="button" className="boton-secundario" onClick={() => setPaso(3)}>
+                Volver
+              </button>
+              <button
+                type="button"
+                className="boton-confirmar"
+                disabled={!hora || creando || !politicaAceptada || consultando}
                 onClick={confirmarReserva}
               >
-                Confirmar Reserva
+                {creando ? 'Registrando...' : 'Confirmar Reserva'}
               </button>
             </div>
           </div>
@@ -453,87 +364,9 @@ export function ReservaCitaPaciente() {
         Para garantizar la cita se abona un adelanto de {formatearSoles(ADELANTO_RESERVA)} mediante
         QR/CIP (pago simulado).
       </p>
+      <PoliticaCitas requerirAceptacion onAceptada={()=>setPoliticaAceptada(true)}/>
 
-      {mensaje && <p className="exito">{mensaje}</p>}
       {error && <p className="error">{error}</p>}
-
-      <h3 className="reserva-titulo">Mis citas</h3>
-      {cargando ? (
-        <p className="subtitulo">Cargando...</p>
-      ) : citas.length === 0 ? (
-        <p className="subtitulo">Todavía no tienes citas registradas.</p>
-      ) : (
-        <ul className="lista-citas">
-          {citas.map((cita) => (
-            <li key={cita.id} className="cita">
-              <div className="cita-datos">
-                <span className="cita-fecha">{formatear(cita.fecha)}</span>
-                <span className="cita-servicio">{cita.servicio ?? 'Consulta general'}</span>
-              </div>
-              <div className="cita-estado">
-                <span className={`estado ${cita.estado.toLowerCase()}`}>
-                  {ETIQUETA_ESTADO[cita.estado]}
-                </span>
-                {cita.estado === 'PENDIENTE_PAGO' && (
-                  <button
-                    type="button"
-                    className="boton-pagar"
-                    onClick={() => abrirPago(cita)}
-                  >
-                    Pagar
-                  </button>
-                )}
-              </div>
-            </li>
-          ))}
-        </ul>
-      )}
-
-      {citaEnPago?.pago && (
-        <div className="modal-fondo" onClick={() => setCitaEnPago(null)}>
-          <div className="modal" onClick={(evento) => evento.stopPropagation()}>
-            <h3>Pago de la reserva</h3>
-            <p className="subtitulo">
-              Escanea el QR o usa el código CIP para garantizar tu cita.
-            </p>
-
-            <QrSimulado
-              contenido={`AURADENT|PAGO|${citaEnPago.pago.referenciaQr ?? citaEnPago.id}`}
-            />
-
-            <div className="pago-detalle">
-              <span>Monto</span>
-              <strong>{formatearSoles(citaEnPago.pago.monto)}</strong>
-            </div>
-            <div className="pago-detalle">
-              <span>Servicio</span>
-              <strong>{citaEnPago.servicio ?? 'Consulta general'}</strong>
-            </div>
-
-            <label className="campo-nota">
-              Código CIP de tu pago (de la app bancaria)
-              <input
-                value={referencia}
-                onChange={(evento) => setReferencia(evento.target.value)}
-                placeholder="CIP000000000000"
-              />
-            </label>
-
-            <div className="modal-acciones">
-              <button type="button" className="boton-secundario" onClick={() => setCitaEnPago(null)}>
-                Cerrar
-              </button>
-              <button
-                type="button"
-                onClick={confirmarPago}
-                disabled={procesandoPago || !referencia.trim()}
-              >
-                {procesandoPago ? 'Procesando...' : 'Pagar con QR'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

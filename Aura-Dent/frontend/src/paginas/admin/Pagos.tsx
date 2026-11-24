@@ -4,7 +4,11 @@ import {
   listarPagosRecepcion,
   rechazarPagoRecepcion
 } from '../../api/recepcion';
-import { CATALOGO_SERVICIOS, formatearSoles } from '../../catalogo_servicios';
+import { formatearSoles } from '../../catalogo_servicios';
+import { obtenerResumen, Resumen } from '../../api/gestion_citas';
+import { Devoluciones } from '../../componentes/Devoluciones';
+import { MovimientosCita } from '../../componentes/MovimientosCita';
+import { Paginador } from '../../componentes/Paginador';
 import { ETIQUETA_PAGO, formatearFechaCorta } from '../../formato';
 import { PagoDetalle } from '../../tipos';
 
@@ -35,11 +39,6 @@ const ETIQUETA_PERIODO: Record<Periodo, string> = {
   mes: 'Mes',
   anio: 'Año'
 };
-
-function valorServicio(servicio: string | null): number {
-  const encontrado = CATALOGO_SERVICIOS.find((item) => item.nombre === servicio);
-  return encontrado ? encontrado.precio : 0;
-}
 
 function inicioSemana(fecha: Date): Date {
   const copia = new Date(fecha);
@@ -92,10 +91,11 @@ function construirPuntos(pagos: PagoDetalle[], periodo: Periodo): Punto[] {
     if (pago.estado !== 'APROBADO') {
       return;
     }
-    const fecha = new Date(pago.fechaCita);
+    if(!pago.pagadoEn)return;
+    const fecha = new Date(pago.pagadoEn);
     const indice = marcos.findIndex((coincide) => coincide(fecha));
     if (indice >= 0) {
-      valores[indice] += valorServicio(pago.servicio);
+      valores[indice] += pago.monto;
     }
   });
 
@@ -103,6 +103,8 @@ function construirPuntos(pagos: PagoDetalle[], periodo: Periodo): Punto[] {
 }
 
 export function PagosAdmin() {
+  const [pagina,setPagina]=useState(1);
+  const [resumen,setResumen]=useState<Resumen|null>(null);
   const [pagos, setPagos] = useState<PagoDetalle[]>([]);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -112,32 +114,22 @@ export function PagosAdmin() {
 
   const cargar = useCallback(async () => {
     try {
-      setPagos(await listarPagosRecepcion());
+      const [lista,r]=await Promise.all([listarPagosRecepcion(pagina),obtenerResumen(periodo)]);
+      setPagos(lista);setResumen(r);setError(null);
     } catch (e) {
       setError((e as Error).message);
     } finally {
       setCargando(false);
     }
-  }, []);
+  }, [pagina,periodo]);
 
   useEffect(() => {
     cargar();
   }, [cargar]);
 
-  const aprobados = useMemo(() => pagos.filter((pago) => pago.estado === 'APROBADO'), [pagos]);
-  const totalGanado = useMemo(
-    () => aprobados.reduce((total, pago) => total + valorServicio(pago.servicio), 0),
-    [aprobados]
-  );
-  const adelantos = useMemo(
-    () => aprobados.reduce((total, pago) => total + pago.monto, 0),
-    [aprobados]
-  );
-  const pendientes = useMemo(
-    () => pagos.filter((pago) => pago.estado === 'PENDIENTE').length,
-    [pagos]
-  );
-  const puntos = useMemo(() => construirPuntos(pagos, periodo), [pagos, periodo]);
+  const totalGanado=resumen?.flujoNeto ?? 0;
+  const adelantos=resumen?.cobros ?? 0;
+  const puntos = useMemo(() => resumen ? resumen.puntos.map(p=>({etiqueta:p.etiqueta,valor:p.cobros})):construirPuntos([],periodo), [resumen,periodo]);
   const totalPeriodo = useMemo(
     () => puntos.reduce((total, punto) => total + punto.valor, 0),
     [puntos]
@@ -170,7 +162,7 @@ export function PagosAdmin() {
         <div>
           <h1>Pagos y reportes</h1>
           <p className="subtitulo">
-            Consulta los ingresos por tratamiento y genera reportes por semana, mes o año.
+            Cobros por fecha de pago y devoluciones por fecha de entrega. Importes simulados de la demo.
           </p>
         </div>
         <button type="button" className="boton-secundario" onClick={cargar}>
@@ -180,30 +172,31 @@ export function PagosAdmin() {
 
       {mensaje && <p className="exito">{mensaje}</p>}
       {error && <p className="error">{error}</p>}
+      {!!resumen?.cobrosSinFecha?.cantidad&&<p className="dato-secundario">Hay {resumen.cobrosSinFecha.cantidad} cobros anteriores sin fecha comprobable ({formatearSoles(resumen.cobrosSinFecha.monto)}). Se conservan y no se asignan a un período inventado.</p>}
 
       <div className="tarjetas">
         <article className="tarjeta-accion tarjeta-dato">
           <h3>{formatearSoles(totalGanado)}</h3>
-          <p>Total ganado (tratamientos confirmados)</p>
+          <p>Flujo neto del período</p>
         </article>
         <article className="tarjeta-accion tarjeta-dato">
           <h3>{formatearSoles(adelantos)}</h3>
-          <p>Adelantos confirmados</p>
+          <p>Cobros del período (adelantos y saldos)</p>
         </article>
         <article className="tarjeta-accion tarjeta-dato">
-          <h3>{aprobados.length}</h3>
-          <p>Pagos aprobados</p>
+          <h3>{formatearSoles(resumen?.devolucionesEntregadas ?? 0)}</h3>
+          <p>Devoluciones entregadas del período</p>
         </article>
         <article className="tarjeta-accion tarjeta-dato">
-          <h3>{pendientes}</h3>
-          <p>Pagos pendientes</p>
+          <h3>{formatearSoles(resumen?.devolucionesPendientes ?? 0)}</h3>
+          <p>Devoluciones pendientes de entrega (total)</p>
         </article>
       </div>
 
       <div className="reporte">
         <div className="reporte-encabezado">
           <div>
-            <h2>Reporte de ingresos</h2>
+            <h2>Reporte de cobros</h2>
             <p className="subtitulo">
               Total del período ({ETIQUETA_PERIODO[periodo].toLowerCase()}):{' '}
               <strong>{formatearSoles(totalPeriodo)}</strong>
@@ -301,7 +294,7 @@ export function PagosAdmin() {
                         </button>
                       </div>
                     ) : (
-                      <span className="dato-secundario">—</span>
+                      <MovimientosCita citaId={pago.citaId}/>
                     )}
                   </td>
                 </tr>
@@ -310,6 +303,9 @@ export function PagosAdmin() {
           </table>
         </div>
       )}
+      <Paginador pagina={pagina} cantidad={pagos.length} onCambiar={setPagina}/>
+      {resumen&&<p className="dato-secundario">Reservas por estado (total): {resumen.reservas.map(r=>`${r.estado}: ${r.cantidad}`).join(' · ')}</p>}
+      <Devoluciones personal alCambiar={()=>void cargar()}/>
     </section>
   );
 }

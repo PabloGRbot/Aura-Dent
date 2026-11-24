@@ -1,10 +1,14 @@
 import { useCallback, useEffect, useState } from 'react';
+import { useConfirmacion } from '../../componentes/Confirmacion';
+import { Paginador } from '../../componentes/Paginador';
 import { anularComprobante, listarComprobantesAdmin } from '../../api/recepcion';
 import { formatearSoles } from '../../catalogo_servicios';
 import { formatearFechaCorta } from '../../formato';
 import { Comprobante } from '../../tipos';
 
 export function ComprobantesAdmin() {
+  const [pagina,setPagina]=useState(1);
+  const confirmar = useConfirmacion();
   const [comprobantes, setComprobantes] = useState<Comprobante[]>([]);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -13,38 +17,33 @@ export function ComprobantesAdmin() {
 
   const cargar = useCallback(async () => {
     try {
-      setComprobantes(await listarComprobantesAdmin());
+      setComprobantes(await listarComprobantesAdmin(pagina));
     } catch (e) {
       setError((e as Error).message);
     } finally {
       setCargando(false);
     }
-  }, []);
+  }, [pagina]);
 
   useEffect(() => {
     cargar();
   }, [cargar]);
 
   async function manejarAnular(comprobante: Comprobante) {
-    if (
-      !window.confirm(
-        `¿Anular el comprobante ${comprobante.serie}-${String(comprobante.correlativo).padStart(6, '0')}?`
-      )
-    ) {
-      return;
-    }
-    setAnulandoId(comprobante.id);
-    setError(null);
-    setMensaje(null);
-    try {
-      await anularComprobante(comprobante.id);
-      setMensaje('Comprobante anulado correctamente.');
-      await cargar();
-    } catch (e) {
-      setError((e as Error).message);
-    } finally {
-      setAnulandoId(null);
-    }
+    confirmar({ titulo: 'Anular comprobante', descripcion: '¿Anular el comprobante ' + comprobante.serie + '-' + String(comprobante.correlativo).padStart(6, '0') + '?', accion: 'Anular comprobante' }, async () => {
+      setAnulandoId(comprobante.id);
+      setError(null);
+      setMensaje(null);
+      try {
+        await anularComprobante(comprobante.id);
+        setMensaje('Comprobante anulado correctamente.');
+        await cargar();
+      } catch (e) {
+        setError((e as Error).message);
+      } finally {
+        setAnulandoId(null);
+      }
+    });
   }
 
   return (
@@ -119,6 +118,7 @@ export function ComprobantesAdmin() {
           </table>
         </div>
       )}
+      <Paginador pagina={pagina} cantidad={comprobantes.length} onCambiar={setPagina}/>
     </section>
   );
 }

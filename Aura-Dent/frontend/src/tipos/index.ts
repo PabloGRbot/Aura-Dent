@@ -27,6 +27,8 @@ export type EstadoCita =
   | 'PENDIENTE_PAGO'
   | 'CONFIRMADA'
   | 'CANCELADA'
+  | 'VENCIDA'
+  | 'NO_ASISTIO'
   | 'ATENDIDA';
 
 export interface Cita {
@@ -38,10 +40,15 @@ export interface Cita {
   servicio: string | null;
   estado: EstadoCita;
   pagoId: string | null;
+  expiraEn: string | null;
   pago: Pago | null;
+  fechaOriginal?: string|null;
+  primerPagoEn?: string|null;
+  acciones?: {puedePagar:boolean;puedeCancelar:boolean;puedeReprogramar:boolean;puedeSolicitarDevolucion:boolean;limiteEdicion:string|null;limiteEdicionSiPagaAhora?:string|null;limiteDevolucion48:string;finGracia:string|null;soloGracia:boolean;motivoEdicion:string|null;motivoDevolucion:string};
 }
 
 export interface CitaAgenda {
+  acciones?:Cita['acciones'];
   id: string;
   pacienteNombre: string;
   pacienteDni: string;
@@ -65,7 +72,7 @@ export interface NotaClinicaDetalle extends NotaClinica {
   servicio: string | null;
 }
 
-export type EstadoPago = 'PENDIENTE' | 'APROBADO' | 'RECHAZADO';
+export type EstadoPago = 'PENDIENTE' | 'APROBADO' | 'RECHAZADO' | 'ANULADO';
 export type MetodoPago = 'EFECTIVO' | 'TARJETA' | 'YAPE' | 'PLIN' | 'QR';
 export type TipoPago = 'ADELANTO' | 'SALDO' | 'UNICO';
 

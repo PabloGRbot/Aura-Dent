@@ -3,6 +3,11 @@ import * as dotenv from 'dotenv';
 dotenv.config();
 
 export const variablesEntorno = {
+  entorno: process.env.NODE_ENV ?? 'development',
+  corsOrigenes: (process.env.CORS_ORIGINS ?? 'http://localhost:5173')
+    .split(',')
+    .map((origen) => origen.trim())
+    .filter(Boolean),
   puerto: Number(process.env.PORT ?? 3000),
   postgres: {
     host: process.env.POSTGRES_HOST ?? 'localhost',
@@ -32,3 +37,10 @@ export const variablesEntorno = {
     modelo: process.env.GEMINI_MODELO ?? 'gemini-3.5-flash'
   }
 };
+
+if (
+  variablesEntorno.entorno === 'production' &&
+  variablesEntorno.jwt.secreto === 'cambia-este-secreto-en-produccion'
+) {
+  throw new Error('JWT_SECRET debe configurarse en producción.');
+}

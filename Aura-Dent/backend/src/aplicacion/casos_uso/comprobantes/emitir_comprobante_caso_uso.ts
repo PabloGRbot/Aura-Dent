@@ -21,9 +21,10 @@ export class EmitirComprobanteCasoUso implements EmitirComprobantePuerto {
     if (pago.estado !== 'APROBADO') {
       throw new ErrorAplicacion('El pago no está aprobado', 'ESTADO_INVALIDO');
     }
+    if(pago.citaId!==solicitud.citaId) throw new ErrorAplicacion('El pago no corresponde a esta cita.','DATOS_INVALIDOS');
 
     const existente = await this.comprobanteRepositorio.buscarPorPagoId(solicitud.pagoId);
-    if (existente) {
+    if (existente && existente.estado === 'EMITIDO') {
       throw new ErrorAplicacion('El pago ya tiene un comprobante emitido', 'COMPROBANTE_YA_EXISTE');
     }
 

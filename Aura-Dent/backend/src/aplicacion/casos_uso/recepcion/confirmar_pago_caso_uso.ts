@@ -2,12 +2,14 @@ import { Pago } from '../../../dominio/modelos/pago';
 import { ConfirmarPagoPuerto } from '../../../dominio/puertos/entrada/gestion_recepcion_puerto';
 import { CitaRepositorioPuerto } from '../../../dominio/puertos/salida/cita_repositorio_puerto';
 import { PagoRepositorioPuerto } from '../../../dominio/puertos/salida/pago_repositorio_puerto';
+import { EmitirBoletaPorPagoPuerto } from '../../../dominio/puertos/entrada/comprobante_puerto';
 import { ErrorAplicacion } from '../../../compartido/error_aplicacion';
 
 export class ConfirmarPagoCasoUso implements ConfirmarPagoPuerto {
   constructor(
     private readonly pagoRepositorio: PagoRepositorioPuerto,
-    private readonly citaRepositorio: CitaRepositorioPuerto
+    private readonly citaRepositorio: CitaRepositorioPuerto,
+    private readonly emitirBoleta: EmitirBoletaPorPagoPuerto
   ) {}
 
   async confirmar(pagoId: string): Promise<Pago> {
@@ -26,6 +28,8 @@ export class ConfirmarPagoCasoUso implements ConfirmarPagoPuerto {
       cita.confirmar(pago.id);
       await this.citaRepositorio.actualizar(cita);
     }
+
+    await this.emitirBoleta.emitirBoleta(pago.id, pago.citaId);
 
     return pago;
   }

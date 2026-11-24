@@ -1,4 +1,8 @@
 import { FormEvent, useCallback, useEffect, useState } from 'react';
+import { Selector } from '../../componentes/Selector';
+import { Paginador } from '../../componentes/Paginador';
+import { FechaFormulario } from '../../componentes/FechaFormulario';
+import { useConfirmacion } from '../../componentes/Confirmacion';
 import {
   actualizarUsuario,
   crearUsuario,
@@ -23,6 +27,8 @@ const FORM_VACIO: DatosUsuario = {
 };
 
 export function UsuariosAdmin() {
+  const [pagina,setPagina]=useState(1);
+  const confirmar = useConfirmacion();
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -33,13 +39,13 @@ export function UsuariosAdmin() {
 
   const cargar = useCallback(async () => {
     try {
-      setUsuarios(await listarUsuarios());
+      setUsuarios(await listarUsuarios(pagina));
     } catch (e) {
       setError((e as Error).message);
     } finally {
       setCargando(false);
     }
-  }, []);
+  }, [pagina]);
 
   useEffect(() => {
     cargar();
@@ -103,18 +109,17 @@ export function UsuariosAdmin() {
   }
 
   async function borrar(usuario: Usuario) {
-    if (!window.confirm(`¿Eliminar a ${usuario.nombres} ${usuario.apellidos}?`)) {
-      return;
-    }
-    setError(null);
-    setMensaje(null);
-    try {
-      await eliminarUsuario(usuario.id);
-      setMensaje('Usuario eliminado correctamente.');
-      await cargar();
-    } catch (e) {
-      setError((e as Error).message);
-    }
+    confirmar({ titulo: 'Desactivar usuario', descripcion: 'Se desactivará el acceso de ' + usuario.nombres + ' ' + usuario.apellidos + '. Sus citas y registros se conservarán.', accion: 'Desactivar usuario' }, async () => {
+      setError(null);
+      setMensaje(null);
+      try {
+        await eliminarUsuario(usuario.id);
+        setMensaje('Usuario desactivado. Su historial se conserva.');
+        await cargar();
+      } catch (e) {
+        setError((e as Error).message);
+      }
+    });
   }
 
   return (
@@ -122,7 +127,7 @@ export function UsuariosAdmin() {
       <div className="encabezado-seccion">
         <div>
           <h1>Usuarios</h1>
-          <p className="subtitulo">Crea, edita y elimina las cuentas del personal y pacientes.</p>
+          <p className="subtitulo">Crea, edita y desactiva las cuentas del personal y pacientes.</p>
         </div>
         <button type="button" onClick={abrirNuevo}>
           Nuevo usuario
@@ -163,7 +168,7 @@ export function UsuariosAdmin() {
                         Editar
                       </button>
                       <button type="button" className="boton-peligro" onClick={() => borrar(usuario)}>
-                        Eliminar
+                        Desactivar
                       </button>
                     </div>
                   </td>
@@ -221,18 +226,17 @@ export function UsuariosAdmin() {
               </label>
               <label>
                 Rol
-                <select value={form.rol} onChange={(e) => actualizarCampo('rol', e.target.value)}>
+                <Selector value={form.rol} onChange={(e) => actualizarCampo('rol', e.target.value)}>
                   {ROLES.map((rol) => (
                     <option key={rol} value={rol}>
                       {NOMBRE_ROL[rol]}
                     </option>
                   ))}
-                </select>
+                </Selector>
               </label>
               <label>
                 Fecha de nacimiento
-                <input
-                  type="date"
+                <FechaFormulario
                   value={form.fechaNacimiento ?? ''}
                   onChange={(e) => actualizarCampo('fechaNacimiento', e.target.value)}
                 />
@@ -268,6 +272,7 @@ export function UsuariosAdmin() {
           </form>
         </div>
       )}
+      <Paginador pagina={pagina} cantidad={usuarios.length} onCambiar={setPagina}/>
     </section>
   );
 }

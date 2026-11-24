@@ -48,7 +48,8 @@ export class CrearCitaCasoUso implements CrearCitaPuerto {
       solicitud.duracionMinutos,
       'PENDIENTE_PAGO',
       null,
-      solicitud.servicio
+      solicitud.servicio,
+      new Date(Date.now() + 15 * 60 * 1000)
     );
 
     const referenciaQr = await this.pasarelaPago.generarQr(MONTO_ADELANTO, cita.id);

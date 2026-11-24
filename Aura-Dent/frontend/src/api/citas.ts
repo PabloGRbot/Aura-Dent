@@ -13,8 +13,12 @@ export function crearCita(
   });
 }
 
-export function obtenerMisCitas(): Promise<Cita[]> {
-  return peticion<Cita[]>('/api/citas/mis-citas');
+export function obtenerMisCitas(pagina=1,seccion=''): Promise<Cita[]> {
+  return peticion<Cita[]>(`/api/citas/mis-citas?pagina=${pagina}&seccion=${seccion}`);
+}
+
+export function eliminarReserva(citaId: string): Promise<void> {
+  return peticion<void>(`/api/citas/${citaId}`, { method: 'DELETE' });
 }
 
 export function pagarCita(citaId: string, referenciaQr: string): Promise<Cita> {

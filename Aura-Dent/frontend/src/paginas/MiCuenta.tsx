@@ -1,4 +1,5 @@
 import { FormEvent, useEffect, useState } from 'react';
+import { FechaFormulario } from '../componentes/FechaFormulario';
 import { actualizarMiPerfil, DatosPerfil } from '../api/autenticacion';
 import { useAutenticacion } from '../contexto/ContextoAutenticacion';
 import { NOMBRE_ROL } from '../navegacion';
@@ -120,8 +121,7 @@ export function MiCuenta() {
           </label>
           <label>
             Fecha de nacimiento
-            <input
-              type="date"
+            <FechaFormulario
               value={form.fechaNacimiento ?? ''}
               onChange={(e) => actualizarCampo('fechaNacimiento', e.target.value)}
             />

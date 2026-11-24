@@ -2,8 +2,10 @@ import { useCallback, useEffect, useState } from 'react';
 import { listarMisPacientes } from '../../api/odontologo';
 import { useAutenticacion } from '../../contexto/ContextoAutenticacion';
 import { PacienteRecepcion } from '../../api/recepcion';
+import { Paginador } from '../../componentes/Paginador';
 
 export function PacientesOdontologo() {
+  const [pagina,setPagina]=useState(1);
   const { usuario } = useAutenticacion();
   const [pacientes, setPacientes] = useState<PacienteRecepcion[]>([]);
   const [cargando, setCargando] = useState(true);
@@ -11,13 +13,13 @@ export function PacientesOdontologo() {
 
   const cargar = useCallback(async () => {
     try {
-      setPacientes(await listarMisPacientes());
+      setPacientes(await listarMisPacientes(pagina));
     } catch (e) {
       setError((e as Error).message);
     } finally {
       setCargando(false);
     }
-  }, []);
+  }, [pagina]);
 
   useEffect(() => {
     cargar();
@@ -58,6 +60,7 @@ export function PacientesOdontologo() {
           </table>
         </div>
       )}
+      <Paginador pagina={pagina} cantidad={pacientes.length} onCambiar={setPagina}/>
     </section>
   );
 }

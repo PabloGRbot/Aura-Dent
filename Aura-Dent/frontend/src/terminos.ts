@@ -3,7 +3,7 @@ export interface ClausulaTermino {
   texto: string;
 }
 
-export const ACTUALIZACION_TERMINOS = '15 de octubre de 2026';
+export const ACTUALIZACION_TERMINOS = '23 de octubre de 2026';
 
 export const TERMINOS_Y_CONDICIONES: ClausulaTermino[] = [
   {
@@ -29,12 +29,12 @@ export const TERMINOS_Y_CONDICIONES: ClausulaTermino[] = [
   {
     titulo: '5. Cancelaciones y reprogramaciones',
     texto:
-      'El paciente puede cancelar o reprogramar su cita desde la sección "Mis citas" hasta 24 horas antes del horario reservado. Las cancelaciones realizadas dentro de las 24 horas previas podrán implicar la no devolución del adelanto, salvo causa justificada informada a la clínica. Los pacientes que no se presenten a su cita quedarán registrados para futuras reservas.'
+      'Puedes modificar varias veces la fecha, hora u odontólogo durante el día del primer pago, hasta las 23:59 de Lima y antes del inicio, manteniendo el servicio y sujeto a disponibilidad. Puedes cancelar antes del inicio y solicitar devolución del adelanto durante ese mismo día, o si faltan al menos 48 horas exactas para la cita. Para citas de mañana, el beneficio puede terminar hoy a las 23:59. Los cambios no renuevan los plazos: el límite de 48 horas usa la fecha más temprana entre la cita original y la vigente. Fuera de esos plazos o por inasistencia se pierde el adelanto. Si la clínica cancela, corresponde devolver el adelanto. Las reservas canceladas y vencidas se conservan para trazabilidad.'
   },
   {
     titulo: '6. Precios y pagos',
     texto:
-      'Los precios publicados en la plataforma (consultas, limpieza, blanqueamiento, ortodoncia, entre otros) son referenciales y pueden modificarse sin previo aviso; el precio aplicable será el vigente al momento de la atención. Los pagos pueden realizarse en efectivo, tarjetas de débito y crédito, Yape o Plin. El adelanto de la reserva se paga de forma virtual y no genera derecho a devolución salvo cancelación oportuna por parte de la clínica.'
+      'Esta plataforma es una demo: los pagos son simulados y no debes enviar dinero real. Los precios de tratamiento son referenciales y se distinguen del importe cobrado. Las devoluciones del adelanto se solicitan al cancelar conforme a la cláusula 5 y se recogen en el consultorio. El derecho se evalúa al solicitarlo y no al recogerlo. Recepción registra la entrega; los saldos de tratamiento se revisan por separado.'
   },
   {
     titulo: '7. Datos personales y salud',
@@ -59,7 +59,7 @@ export const TERMINOS_Y_CONDICIONES: ClausulaTermino[] = [
   {
     titulo: '11. Modificaciones',
     texto:
-      'Aura-Dent puede actualizar estos Términos y Condiciones en cualquier momento. Los cambios vigentes se publicarán en esta misma sección con su fecha de actualización. El uso continuado de la plataforma tras la publicación implica la aceptación de las condiciones modificadas.'
+      'Las nuevas versiones se publican con su fecha de actualización. Se solicita aceptación expresa de la versión vigente antes de nuevas reservas y se registra la versión y la fecha de aceptación.'
   },
   {
     titulo: '12. Ley aplicable y contacto',

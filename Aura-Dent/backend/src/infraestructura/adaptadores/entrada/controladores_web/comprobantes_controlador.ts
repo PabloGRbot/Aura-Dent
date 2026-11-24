@@ -53,7 +53,7 @@ export function crearComprobantesControlador(
   autenticar: RequestHandler
 ): Router {
   const router = Router();
-  router.use(autenticar);
+  router.use(['/comprobantes', '/recepcion/comprobantes'], autenticar);
 
   router.post(
     '/recepcion/comprobantes',

@@ -1,5 +1,7 @@
 import { Request, RequestHandler, Response, Router } from 'express';
 import { Usuario } from '../../../../dominio/modelos/usuario';
+import { GestionCitasPostgres } from '../../salida/base_datos_postgres/gestion_citas_postgres';
+import { VERSION_POLITICA } from '../../../../dominio/servicios/politica_citas';
 import {
   LoginPuerto,
   ObtenerPerfilPuerto
@@ -29,7 +31,8 @@ export function crearAutenticacionControlador(
   obtenerPerfil: ObtenerPerfilPuerto,
   crearUsuario: CrearUsuarioPuerto,
   actualizarUsuario: ActualizarUsuarioPuerto,
-  autenticar: RequestHandler
+  autenticar: RequestHandler,
+  gestion?: GestionCitasPostgres
 ): Router {
   const router = Router();
 
@@ -42,6 +45,7 @@ export function crearAutenticacionControlador(
         res.status(400).json({ mensaje: 'Debes aceptar los Términos y Condiciones.' });
         return;
       }
+      if(gestion && req.body.versionPolitica!==VERSION_POLITICA){res.status(409).json({mensaje:'La política cambió o no se cargó. Actualiza la página y acepta la versión vigente.'});return;}
 
       await crearUsuario.crear({
         nombres,
@@ -55,6 +59,7 @@ export function crearAutenticacionControlador(
       });
 
       const sesion = await login.login(email, password);
+      if(gestion) await gestion.aceptarPolitica(sesion.usuario.id,VERSION_POLITICA);
       res.status(201).json({ token: sesion.token, usuario: aUsuarioDto(sesion.usuario) });
     } catch (error) {
       const codigo = error instanceof ErrorAplicacion ? error.codigo : 'ERROR';

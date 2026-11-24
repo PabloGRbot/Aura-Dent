@@ -1,13 +1,11 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { obtenerAgenda } from '../api/agenda';
+import { peticion } from '../api/cliente';
 import { obtenerConfiguracion } from '../api/configuracion';
-import { listarCitasRecepcion, listarPagosRecepcion } from '../api/recepcion';
-import { listarUsuarios } from '../api/usuarios';
 import { ChatIaWidget } from '../componentes/ChatIaWidget';
-import { ReservaCitaPaciente } from '../componentes/ReservaCitaPaciente';
 import { useAutenticacion } from '../contexto/ContextoAutenticacion';
-import { CitaAgenda, PagoDetalle, Rol, Usuario } from '../tipos';
+import { Rol } from '../tipos';
+interface ResumenPanel {usuarios:{rol:string;cantidad:number}[];citas:{estado:string;cantidad:number}[];pagos:{estado:string;cantidad:number}[]}
 
 interface Accion {
   titulo: string;
@@ -29,7 +27,7 @@ const CONTENIDO: Record<Rol, ContenidoPanel> = {
       {
         titulo: 'Reservar una cita',
         detalle: 'Elige servicio, fecha y hora disponible.',
-        ruta: '/paciente/mis-citas'
+        ruta: '/paciente/registrar-cita'
       },
       {
         titulo: 'Mis próximas citas',
@@ -121,12 +119,12 @@ const ETIQUETA_CONTEO: { rol: Rol; etiqueta: string }[] = [
 ];
 
 function ResumenAdmin() {
-  const [usuarios, setUsuarios] = useState<Usuario[]>([]);
+  const [conteo,setConteo]=useState<Record<string,number>>({});
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    listarUsuarios()
-      .then(setUsuarios)
+    peticion<ResumenPanel>('/api/panel/resumen')
+      .then(r=>setConteo(Object.fromEntries(r.usuarios.map(u=>[u.rol,u.cantidad]))))
       .catch((e) => setError((e as Error).message));
   }, []);
 
@@ -134,15 +132,10 @@ function ResumenAdmin() {
     return <p className="subtitulo">{error}</p>;
   }
 
-  const conteo = usuarios.reduce<Record<string, number>>((acumulado, usuario) => {
-    acumulado[usuario.rol] = (acumulado[usuario.rol] ?? 0) + 1;
-    return acumulado;
-  }, {});
-
   return (
     <div className="tarjetas">
       <article className="tarjeta-accion tarjeta-dato">
-        <h3>{usuarios.length}</h3>
+        <h3>{Object.values(conteo).reduce((s,n)=>s+n,0)}</h3>
         <p>Usuarios registrados</p>
       </article>
       {ETIQUETA_CONTEO.map(({ rol, etiqueta }) => (
@@ -155,13 +148,13 @@ function ResumenAdmin() {
   );
 }
 
-function ResumenOdontologo({ usuarioId }: { usuarioId: string }) {
-  const [agenda, setAgenda] = useState<CitaAgenda[]>([]);
+function ResumenOdontologo({ usuarioId: _usuarioId }: { usuarioId: string }) {
+  const [conteo,setConteo]=useState<Record<string,number>>({});
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    obtenerAgenda()
-      .then(setAgenda)
+    peticion<ResumenPanel>('/api/panel/resumen')
+      .then(r=>setConteo(Object.fromEntries(r.citas.map(c=>[c.estado,c.cantidad]))))
       .catch((e) => setError((e as Error).message));
   }, []);
 
@@ -169,22 +162,18 @@ function ResumenOdontologo({ usuarioId }: { usuarioId: string }) {
     return <p className="subtitulo">{error}</p>;
   }
 
-  const mias = agenda.filter((cita) => cita.odontologoId === usuarioId);
-  const disponibles = agenda.filter((cita) => !cita.odontologoId);
-  const atendidas = mias.filter((cita) => cita.estado === 'ATENDIDA');
-
   return (
     <div className="tarjetas">
       <article className="tarjeta-accion tarjeta-dato">
-        <h3>{mias.length}</h3>
+        <h3>{Object.values(conteo).reduce((s,n)=>s+n,0)}</h3>
         <p>Citas asignadas</p>
       </article>
       <article className="tarjeta-accion tarjeta-dato">
-        <h3>{disponibles.length}</h3>
-        <p>Disponibles para tomar</p>
+        <h3>{conteo.CONFIRMADA ?? 0}</h3>
+        <p>Citas confirmadas</p>
       </article>
       <article className="tarjeta-accion tarjeta-dato">
-        <h3>{atendidas.length}</h3>
+        <h3>{conteo.ATENDIDA ?? 0}</h3>
         <p>Atenciones finalizadas</p>
       </article>
     </div>
@@ -192,15 +181,15 @@ function ResumenOdontologo({ usuarioId }: { usuarioId: string }) {
 }
 
 function ResumenRecepcion() {
-  const [citas, setCitas] = useState<CitaAgenda[]>([]);
-  const [pagos, setPagos] = useState<PagoDetalle[]>([]);
+  const [citas,setCitas]=useState<Record<string,number>>({});
+  const [pagos,setPagos]=useState<Record<string,number>>({});
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    Promise.all([listarCitasRecepcion(), listarPagosRecepcion()])
-      .then(([citasData, pagosData]) => {
-        setCitas(citasData);
-        setPagos(pagosData);
+    peticion<ResumenPanel>('/api/panel/resumen')
+      .then(r => {
+        setCitas(Object.fromEntries(r.citas.map(c=>[c.estado,c.cantidad])));
+        setPagos(Object.fromEntries(r.pagos.map(p=>[p.estado,p.cantidad])));
       })
       .catch((e) => setError((e as Error).message));
   }, []);
@@ -209,14 +198,14 @@ function ResumenRecepcion() {
     return <p className="subtitulo">{error}</p>;
   }
 
-  const porConfirmar = citas.filter((cita) => cita.estado === 'PENDIENTE_PAGO').length;
-  const confirmadas = citas.filter((cita) => cita.estado === 'CONFIRMADA').length;
-  const pagosPendientes = pagos.filter((pago) => pago.estado === 'PENDIENTE').length;
+  const porConfirmar=citas.PENDIENTE_PAGO ?? 0;
+  const confirmadas=citas.CONFIRMADA ?? 0;
+  const pagosPendientes=pagos.PENDIENTE ?? 0;
 
   return (
     <div className="tarjetas">
       <article className="tarjeta-accion tarjeta-dato">
-        <h3>{citas.length}</h3>
+        <h3>{Object.values(citas).reduce((s,n)=>s+n,0)}</h3>
         <p>Citas registradas</p>
       </article>
       <article className="tarjeta-accion tarjeta-dato">
@@ -279,9 +268,7 @@ export function Panel() {
         )}
       </div>
 
-      {usuario.rol === 'Paciente' && <ReservaCitaPaciente />}
-
-       {usuario.rol === 'Paciente' && <ChatIaWidget />}
+      {usuario.rol === 'Paciente' && <ChatIaWidget />}
 
     </section>
   );

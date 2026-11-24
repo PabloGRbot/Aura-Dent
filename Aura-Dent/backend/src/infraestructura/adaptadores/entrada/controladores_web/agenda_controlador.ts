@@ -1,5 +1,6 @@
 import { Request, RequestHandler, Response, Router } from 'express';
 import { NotaClinica } from '../../../../dominio/modelos/nota_clinica';
+import { accionesCita } from '../../../../dominio/servicios/politica_citas';
 import {
   ActualizarNotaPuerto,
   AgregarNotaPuerto,
@@ -22,7 +23,8 @@ function aAgendaDto(item: CitaAgendaItem) {
     fecha: item.cita.fecha,
     duracionMinutos: item.cita.duracionMinutos,
     servicio: item.cita.servicio,
-    estado: item.cita.estado
+    estado: accionesCita(item.cita).estadoEfectivo,
+    acciones:accionesCita(item.cita)
   };
 }
 

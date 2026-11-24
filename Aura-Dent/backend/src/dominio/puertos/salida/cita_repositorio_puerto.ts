@@ -15,4 +15,5 @@ export interface CitaRepositorioPuerto {
   existeConflicto(odontologoId: string, fecha: Date, duracionMinutos: number): Promise<boolean>;
   guardar(cita: CitaMedica): Promise<void>;
   actualizar(cita: CitaMedica): Promise<void>;
+  eliminarPendientesVencidas(ahora: Date): Promise<number>;
 }

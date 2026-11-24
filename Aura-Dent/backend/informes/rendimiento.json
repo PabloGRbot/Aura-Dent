@@ -1,0 +1,567 @@
+{
+  "fecha": "2026-10-23T08:51:46.182Z",
+  "entorno": {
+    "node": "v24.13.1",
+    "cpu": "11th Gen Intel(R) Core(TM) i5-1135G7 @ 2.40GHz",
+    "nucleos": 8,
+    "memoriaGB": 15.7
+  },
+  "condiciones": "Local, caché caliente, 20 muestras secuenciales, sin concurrencia ni latencia externa. Datos sintéticos en esquemas aislados eliminados al terminar.",
+  "mediciones": [
+    {
+      "citas": 100000,
+      "pagos": 100000,
+      "usuarios": 11000,
+      "consultas": [
+        {
+          "nombre": "Mis citas + pagos (servicio real)",
+          "muestras": 20,
+          "p50Ms": 2.16,
+          "p95Ms": 3.71,
+          "objetivoMs": 1000,
+          "cumple": true
+        },
+        {
+          "nombre": "Resumen gerencial anual HTTP",
+          "muestras": 20,
+          "p50Ms": 333.83,
+          "p95Ms": 401.77,
+          "objetivoMs": 3000,
+          "cumple": true
+        },
+        {
+          "nombre": "Disponibilidad odontólogo",
+          "muestras": 20,
+          "p50Ms": 1.75,
+          "p95Ms": 3.53,
+          "objetivoMs": 1000,
+          "cumple": true
+        }
+      ],
+      "planes": [
+        [
+          {
+            "Plan": {
+              "Node Type": "Limit",
+              "Parallel Aware": false,
+              "Async Capable": false,
+              "Startup Cost": 43.1,
+              "Total Cost": 43.13,
+              "Plan Rows": 10,
+              "Plan Width": 190,
+              "Actual Startup Time": 0.069,
+              "Actual Total Time": 0.072,
+              "Actual Rows": 10,
+              "Actual Loops": 1,
+              "Shared Hit Blocks": 23,
+              "Shared Read Blocks": 0,
+              "Shared Dirtied Blocks": 0,
+              "Shared Written Blocks": 0,
+              "Local Hit Blocks": 0,
+              "Local Read Blocks": 0,
+              "Local Dirtied Blocks": 0,
+              "Local Written Blocks": 0,
+              "Temp Read Blocks": 0,
+              "Temp Written Blocks": 0,
+              "Plans": [
+                {
+                  "Node Type": "Sort",
+                  "Parent Relationship": "Outer",
+                  "Parallel Aware": false,
+                  "Async Capable": false,
+                  "Startup Cost": 43.1,
+                  "Total Cost": 43.13,
+                  "Plan Rows": 10,
+                  "Plan Width": 190,
+                  "Actual Startup Time": 0.068,
+                  "Actual Total Time": 0.069,
+                  "Actual Rows": 10,
+                  "Actual Loops": 1,
+                  "Sort Key": [
+                    "fecha DESC",
+                    "id DESC"
+                  ],
+                  "Sort Method": "quicksort",
+                  "Sort Space Used": 26,
+                  "Sort Space Type": "Memory",
+                  "Shared Hit Blocks": 23,
+                  "Shared Read Blocks": 0,
+                  "Shared Dirtied Blocks": 0,
+                  "Shared Written Blocks": 0,
+                  "Local Hit Blocks": 0,
+                  "Local Read Blocks": 0,
+                  "Local Dirtied Blocks": 0,
+                  "Local Written Blocks": 0,
+                  "Temp Read Blocks": 0,
+                  "Temp Written Blocks": 0,
+                  "Plans": [
+                    {
+                      "Node Type": "Bitmap Heap Scan",
+                      "Parent Relationship": "Outer",
+                      "Parallel Aware": false,
+                      "Async Capable": false,
+                      "Relation Name": "citas",
+                      "Alias": "citas",
+                      "Startup Cost": 4.5,
+                      "Total Cost": 42.94,
+                      "Plan Rows": 10,
+                      "Plan Width": 190,
+                      "Actual Startup Time": 0.042,
+                      "Actual Total Time": 0.053,
+                      "Actual Rows": 10,
+                      "Actual Loops": 1,
+                      "Recheck Cond": "(paciente_id = '451012f1-cab3-d93b-f58f-a0f9b5650798'::uuid)",
+                      "Rows Removed by Index Recheck": 0,
+                      "Exact Heap Blocks": 20,
+                      "Lossy Heap Blocks": 0,
+                      "Shared Hit Blocks": 23,
+                      "Shared Read Blocks": 0,
+                      "Shared Dirtied Blocks": 0,
+                      "Shared Written Blocks": 0,
+                      "Local Hit Blocks": 0,
+                      "Local Read Blocks": 0,
+                      "Local Dirtied Blocks": 0,
+                      "Local Written Blocks": 0,
+                      "Temp Read Blocks": 0,
+                      "Temp Written Blocks": 0,
+                      "Plans": [
+                        {
+                          "Node Type": "Bitmap Index Scan",
+                          "Parent Relationship": "Outer",
+                          "Parallel Aware": false,
+                          "Async Capable": false,
+                          "Index Name": "idx_citas_paciente_fecha",
+                          "Startup Cost": 0,
+                          "Total Cost": 4.49,
+                          "Plan Rows": 10,
+                          "Plan Width": 0,
+                          "Actual Startup Time": 0.015,
+                          "Actual Total Time": 0.015,
+                          "Actual Rows": 20,
+                          "Actual Loops": 1,
+                          "Index Cond": "(paciente_id = '451012f1-cab3-d93b-f58f-a0f9b5650798'::uuid)",
+                          "Shared Hit Blocks": 3,
+                          "Shared Read Blocks": 0,
+                          "Shared Dirtied Blocks": 0,
+                          "Shared Written Blocks": 0,
+                          "Local Hit Blocks": 0,
+                          "Local Read Blocks": 0,
+                          "Local Dirtied Blocks": 0,
+                          "Local Written Blocks": 0,
+                          "Temp Read Blocks": 0,
+                          "Temp Written Blocks": 0
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "Planning": {
+              "Shared Hit Blocks": 4,
+              "Shared Read Blocks": 0,
+              "Shared Dirtied Blocks": 0,
+              "Shared Written Blocks": 0,
+              "Local Hit Blocks": 0,
+              "Local Read Blocks": 0,
+              "Local Dirtied Blocks": 0,
+              "Local Written Blocks": 0,
+              "Temp Read Blocks": 0,
+              "Temp Written Blocks": 0
+            },
+            "Planning Time": 0.34,
+            "Triggers": [],
+            "Execution Time": 0.104
+          }
+        ],
+        [
+          {
+            "Plan": {
+              "Node Type": "Aggregate",
+              "Strategy": "Plain",
+              "Partial Mode": "Simple",
+              "Parallel Aware": false,
+              "Async Capable": false,
+              "Startup Cost": 3103.27,
+              "Total Cost": 3103.28,
+              "Plan Rows": 1,
+              "Plan Width": 32,
+              "Actual Startup Time": 15.65,
+              "Actual Total Time": 15.652,
+              "Actual Rows": 1,
+              "Actual Loops": 1,
+              "Shared Hit Blocks": 1069,
+              "Shared Read Blocks": 0,
+              "Shared Dirtied Blocks": 0,
+              "Shared Written Blocks": 0,
+              "Local Hit Blocks": 0,
+              "Local Read Blocks": 0,
+              "Local Dirtied Blocks": 0,
+              "Local Written Blocks": 0,
+              "Temp Read Blocks": 0,
+              "Temp Written Blocks": 0,
+              "Plans": [
+                {
+                  "Node Type": "Bitmap Heap Scan",
+                  "Parent Relationship": "Outer",
+                  "Parallel Aware": false,
+                  "Async Capable": false,
+                  "Relation Name": "pagos",
+                  "Alias": "pagos",
+                  "Startup Cost": 856.6,
+                  "Total Cost": 3020.3,
+                  "Plan Rows": 33188,
+                  "Plan Width": 5,
+                  "Actual Startup Time": 3.457,
+                  "Actual Total Time": 9.138,
+                  "Actual Rows": 33228,
+                  "Actual Loops": 1,
+                  "Recheck Cond": "((pagado_en >= (now() - '1 year'::interval)) AND (pagado_en < now()) AND ((estado)::text = 'APROBADO'::text))",
+                  "Rows Removed by Index Recheck": 0,
+                  "Exact Heap Blocks": 938,
+                  "Lossy Heap Blocks": 0,
+                  "Shared Hit Blocks": 1069,
+                  "Shared Read Blocks": 0,
+                  "Shared Dirtied Blocks": 0,
+                  "Shared Written Blocks": 0,
+                  "Local Hit Blocks": 0,
+                  "Local Read Blocks": 0,
+                  "Local Dirtied Blocks": 0,
+                  "Local Written Blocks": 0,
+                  "Temp Read Blocks": 0,
+                  "Temp Written Blocks": 0,
+                  "Plans": [
+                    {
+                      "Node Type": "Bitmap Index Scan",
+                      "Parent Relationship": "Outer",
+                      "Parallel Aware": false,
+                      "Async Capable": false,
+                      "Index Name": "idx_pagos_cobros_fecha",
+                      "Startup Cost": 0,
+                      "Total Cost": 848.31,
+                      "Plan Rows": 33188,
+                      "Plan Width": 0,
+                      "Actual Startup Time": 3.232,
+                      "Actual Total Time": 3.232,
+                      "Actual Rows": 33228,
+                      "Actual Loops": 1,
+                      "Index Cond": "((pagado_en >= (now() - '1 year'::interval)) AND (pagado_en < now()))",
+                      "Shared Hit Blocks": 131,
+                      "Shared Read Blocks": 0,
+                      "Shared Dirtied Blocks": 0,
+                      "Shared Written Blocks": 0,
+                      "Local Hit Blocks": 0,
+                      "Local Read Blocks": 0,
+                      "Local Dirtied Blocks": 0,
+                      "Local Written Blocks": 0,
+                      "Temp Read Blocks": 0,
+                      "Temp Written Blocks": 0
+                    }
+                  ]
+                }
+              ]
+            },
+            "Planning": {
+              "Shared Hit Blocks": 0,
+              "Shared Read Blocks": 0,
+              "Shared Dirtied Blocks": 0,
+              "Shared Written Blocks": 0,
+              "Local Hit Blocks": 0,
+              "Local Read Blocks": 0,
+              "Local Dirtied Blocks": 0,
+              "Local Written Blocks": 0,
+              "Temp Read Blocks": 0,
+              "Temp Written Blocks": 0
+            },
+            "Planning Time": 0.191,
+            "Triggers": [],
+            "Execution Time": 15.695
+          }
+        ]
+      ]
+    },
+    {
+      "citas": 1000000,
+      "pagos": 1000000,
+      "usuarios": 11000,
+      "consultas": [
+        {
+          "nombre": "Mis citas + pagos (servicio real)",
+          "muestras": 20,
+          "p50Ms": 4.5,
+          "p95Ms": 5.84,
+          "objetivoMs": 1000,
+          "cumple": true
+        },
+        {
+          "nombre": "Resumen gerencial anual HTTP",
+          "muestras": 20,
+          "p50Ms": 2049.4,
+          "p95Ms": 2182.14,
+          "objetivoMs": 3000,
+          "cumple": true
+        },
+        {
+          "nombre": "Disponibilidad odontólogo",
+          "muestras": 20,
+          "p50Ms": 2.29,
+          "p95Ms": 3.48,
+          "objetivoMs": 1000,
+          "cumple": true
+        }
+      ],
+      "planes": [
+        [
+          {
+            "Plan": {
+              "Node Type": "Limit",
+              "Parallel Aware": false,
+              "Async Capable": false,
+              "Startup Cost": 4.49,
+              "Total Cost": 207.58,
+              "Plan Rows": 50,
+              "Plan Width": 190,
+              "Actual Startup Time": 0.677,
+              "Actual Total Time": 0.99,
+              "Actual Rows": 50,
+              "Actual Loops": 1,
+              "Shared Hit Blocks": 1,
+              "Shared Read Blocks": 106,
+              "Shared Dirtied Blocks": 0,
+              "Shared Written Blocks": 0,
+              "Local Hit Blocks": 0,
+              "Local Read Blocks": 0,
+              "Local Dirtied Blocks": 0,
+              "Local Written Blocks": 0,
+              "Temp Read Blocks": 0,
+              "Temp Written Blocks": 0,
+              "Plans": [
+                {
+                  "Node Type": "Incremental Sort",
+                  "Parent Relationship": "Outer",
+                  "Parallel Aware": false,
+                  "Async Capable": false,
+                  "Startup Cost": 4.49,
+                  "Total Cost": 410.67,
+                  "Plan Rows": 100,
+                  "Plan Width": 190,
+                  "Actual Startup Time": 0.676,
+                  "Actual Total Time": 0.984,
+                  "Actual Rows": 50,
+                  "Actual Loops": 1,
+                  "Sort Key": [
+                    "fecha DESC",
+                    "id DESC"
+                  ],
+                  "Presorted Key": [
+                    "fecha"
+                  ],
+                  "Full-sort Groups": {
+                    "Group Count": 2,
+                    "Sort Methods Used": [
+                      "quicksort"
+                    ],
+                    "Sort Space Memory": {
+                      "Average Sort Space Used": 29,
+                      "Peak Sort Space Used": 29
+                    }
+                  },
+                  "Shared Hit Blocks": 1,
+                  "Shared Read Blocks": 106,
+                  "Shared Dirtied Blocks": 0,
+                  "Shared Written Blocks": 0,
+                  "Local Hit Blocks": 0,
+                  "Local Read Blocks": 0,
+                  "Local Dirtied Blocks": 0,
+                  "Local Written Blocks": 0,
+                  "Temp Read Blocks": 0,
+                  "Temp Written Blocks": 0,
+                  "Plans": [
+                    {
+                      "Node Type": "Index Scan",
+                      "Parent Relationship": "Outer",
+                      "Parallel Aware": false,
+                      "Async Capable": false,
+                      "Scan Direction": "Forward",
+                      "Index Name": "idx_citas_paciente_fecha",
+                      "Relation Name": "citas",
+                      "Alias": "citas",
+                      "Startup Cost": 0.42,
+                      "Total Cost": 406.17,
+                      "Plan Rows": 100,
+                      "Plan Width": 190,
+                      "Actual Startup Time": 0.059,
+                      "Actual Total Time": 0.959,
+                      "Actual Rows": 51,
+                      "Actual Loops": 1,
+                      "Index Cond": "(paciente_id = '451012f1-cab3-d93b-f58f-a0f9b5650798'::uuid)",
+                      "Rows Removed by Index Recheck": 0,
+                      "Shared Hit Blocks": 1,
+                      "Shared Read Blocks": 106,
+                      "Shared Dirtied Blocks": 0,
+                      "Shared Written Blocks": 0,
+                      "Local Hit Blocks": 0,
+                      "Local Read Blocks": 0,
+                      "Local Dirtied Blocks": 0,
+                      "Local Written Blocks": 0,
+                      "Temp Read Blocks": 0,
+                      "Temp Written Blocks": 0
+                    }
+                  ]
+                }
+              ]
+            },
+            "Planning": {
+              "Shared Hit Blocks": 3,
+              "Shared Read Blocks": 1,
+              "Shared Dirtied Blocks": 0,
+              "Shared Written Blocks": 0,
+              "Local Hit Blocks": 0,
+              "Local Read Blocks": 0,
+              "Local Dirtied Blocks": 0,
+              "Local Written Blocks": 0,
+              "Temp Read Blocks": 0,
+              "Temp Written Blocks": 0
+            },
+            "Planning Time": 0.206,
+            "Triggers": [],
+            "Execution Time": 1.032
+          }
+        ],
+        [
+          {
+            "Plan": {
+              "Node Type": "Aggregate",
+              "Strategy": "Plain",
+              "Partial Mode": "Finalize",
+              "Parallel Aware": false,
+              "Async Capable": false,
+              "Startup Cost": 25092.29,
+              "Total Cost": 25092.3,
+              "Plan Rows": 1,
+              "Plan Width": 32,
+              "Actual Startup Time": 293.007,
+              "Actual Total Time": 321.407,
+              "Actual Rows": 1,
+              "Actual Loops": 1,
+              "Shared Hit Blocks": 13334,
+              "Shared Read Blocks": 0,
+              "Shared Dirtied Blocks": 0,
+              "Shared Written Blocks": 0,
+              "Local Hit Blocks": 0,
+              "Local Read Blocks": 0,
+              "Local Dirtied Blocks": 0,
+              "Local Written Blocks": 0,
+              "Temp Read Blocks": 0,
+              "Temp Written Blocks": 0,
+              "Plans": [
+                {
+                  "Node Type": "Gather",
+                  "Parent Relationship": "Outer",
+                  "Parallel Aware": false,
+                  "Async Capable": false,
+                  "Startup Cost": 25092.07,
+                  "Total Cost": 25092.28,
+                  "Plan Rows": 2,
+                  "Plan Width": 32,
+                  "Actual Startup Time": 292.714,
+                  "Actual Total Time": 321.386,
+                  "Actual Rows": 3,
+                  "Actual Loops": 1,
+                  "Workers Planned": 2,
+                  "Workers Launched": 2,
+                  "Single Copy": false,
+                  "Shared Hit Blocks": 13334,
+                  "Shared Read Blocks": 0,
+                  "Shared Dirtied Blocks": 0,
+                  "Shared Written Blocks": 0,
+                  "Local Hit Blocks": 0,
+                  "Local Read Blocks": 0,
+                  "Local Dirtied Blocks": 0,
+                  "Local Written Blocks": 0,
+                  "Temp Read Blocks": 0,
+                  "Temp Written Blocks": 0,
+                  "Plans": [
+                    {
+                      "Node Type": "Aggregate",
+                      "Strategy": "Plain",
+                      "Partial Mode": "Partial",
+                      "Parent Relationship": "Outer",
+                      "Parallel Aware": false,
+                      "Async Capable": false,
+                      "Startup Cost": 24092.07,
+                      "Total Cost": 24092.08,
+                      "Plan Rows": 1,
+                      "Plan Width": 32,
+                      "Actual Startup Time": 226.138,
+                      "Actual Total Time": 226.138,
+                      "Actual Rows": 1,
+                      "Actual Loops": 3,
+                      "Shared Hit Blocks": 13334,
+                      "Shared Read Blocks": 0,
+                      "Shared Dirtied Blocks": 0,
+                      "Shared Written Blocks": 0,
+                      "Local Hit Blocks": 0,
+                      "Local Read Blocks": 0,
+                      "Local Dirtied Blocks": 0,
+                      "Local Written Blocks": 0,
+                      "Temp Read Blocks": 0,
+                      "Temp Written Blocks": 0,
+                      "Workers": [],
+                      "Plans": [
+                        {
+                          "Node Type": "Seq Scan",
+                          "Parent Relationship": "Outer",
+                          "Parallel Aware": true,
+                          "Async Capable": false,
+                          "Relation Name": "pagos",
+                          "Alias": "pagos",
+                          "Startup Cost": 0,
+                          "Total Cost": 23750.67,
+                          "Plan Rows": 136560,
+                          "Plan Width": 5,
+                          "Actual Startup Time": 0.041,
+                          "Actual Total Time": 204.294,
+                          "Actual Rows": 110802,
+                          "Actual Loops": 3,
+                          "Filter": "(((estado)::text = 'APROBADO'::text) AND (pagado_en < now()) AND (pagado_en >= (now() - '1 year'::interval)))",
+                          "Rows Removed by Filter": 222532,
+                          "Shared Hit Blocks": 13334,
+                          "Shared Read Blocks": 0,
+                          "Shared Dirtied Blocks": 0,
+                          "Shared Written Blocks": 0,
+                          "Local Hit Blocks": 0,
+                          "Local Read Blocks": 0,
+                          "Local Dirtied Blocks": 0,
+                          "Local Written Blocks": 0,
+                          "Temp Read Blocks": 0,
+                          "Temp Written Blocks": 0,
+                          "Workers": []
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "Planning": {
+              "Shared Hit Blocks": 0,
+              "Shared Read Blocks": 0,
+              "Shared Dirtied Blocks": 0,
+              "Shared Written Blocks": 0,
+              "Local Hit Blocks": 0,
+              "Local Read Blocks": 0,
+              "Local Dirtied Blocks": 0,
+              "Local Written Blocks": 0,
+              "Temp Read Blocks": 0,
+              "Temp Written Blocks": 0
+            },
+            "Planning Time": 0.14,
+            "Triggers": [],
+            "Execution Time": 321.44
+          }
+        ]
+      ]
+    }
+  ]
+}

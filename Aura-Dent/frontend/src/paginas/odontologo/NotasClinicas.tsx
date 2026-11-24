@@ -1,9 +1,13 @@
 import { useEffect, useState } from 'react';
+import { useConfirmacion } from '../../componentes/Confirmacion';
+import { Paginador } from '../../componentes/Paginador';
 import { obtenerMisNotas, eliminarNota, actualizarNota } from '../../api/agenda';
 import { formatearFecha } from '../../formato';
 import { NotaClinicaDetalle } from '../../tipos';
 
 export function NotasClinicas() {
+  const [pagina,setPagina]=useState(1);
+  const confirmar = useConfirmacion();
   const [notas, setNotas] = useState<NotaClinicaDetalle[]>([]);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -12,7 +16,7 @@ export function NotasClinicas() {
 
   const cargar = async () => {
     try {
-      const data = await obtenerMisNotas();
+      const data = await obtenerMisNotas(pagina);
       setNotas(data);
     } catch (e) {
       setError((e as Error).message);
@@ -23,16 +27,17 @@ export function NotasClinicas() {
 
   useEffect(() => {
     cargar();
-  }, []);
+  }, [pagina]);
 
   async function manejarBorrar(id: string) {
-    if (!window.confirm('¿Eliminar esta nota clínica?')) return;
-    try {
-      await eliminarNota(id);
-      await cargar();
-    } catch (e) {
-      setError((e as Error).message);
-    }
+    confirmar({ titulo: 'Eliminar nota clínica', descripcion: '¿Eliminar esta nota de ' + (notas.find((n) => n.id === id)?.pacienteNombre ?? 'este paciente') + '? Esta acción no se puede deshacer.', accion: 'Eliminar nota' }, async () => {
+      try {
+        await eliminarNota(id);
+        await cargar();
+      } catch (e) {
+        setError((e as Error).message);
+      }
+    });
   }
 
   async function manejarGuardarEdicion(id: string) {
@@ -90,6 +95,7 @@ export function NotasClinicas() {
           ))}
         </div>
       )}
+      <Paginador pagina={pagina} cantidad={notas.length} onCambiar={setPagina}/>
     </section>
   );
 }

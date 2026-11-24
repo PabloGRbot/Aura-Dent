@@ -5,13 +5,15 @@ import {
 import { CitaRepositorioPuerto } from '../../../dominio/puertos/salida/cita_repositorio_puerto';
 import { PagoRepositorioPuerto } from '../../../dominio/puertos/salida/pago_repositorio_puerto';
 import { PasarelaPagoPuerto } from '../../../dominio/puertos/salida/pasarela_pago_puerto';
+import { EmitirBoletaPorPagoPuerto } from '../../../dominio/puertos/entrada/comprobante_puerto';
 import { ErrorAplicacion } from '../../../compartido/error_aplicacion';
 
 export class PagarCitaCasoUso implements PagarCitaPuerto {
   constructor(
     private readonly citaRepositorio: CitaRepositorioPuerto,
     private readonly pagoRepositorio: PagoRepositorioPuerto,
-    private readonly pasarelaPago: PasarelaPagoPuerto
+    private readonly pasarelaPago: PasarelaPagoPuerto,
+    private readonly emitirBoleta: EmitirBoletaPorPagoPuerto
   ) {}
 
   async pagarCita(
@@ -26,8 +28,11 @@ export class PagarCitaCasoUso implements PagarCitaPuerto {
     if (cita.pacienteId !== pacienteId) {
       throw new ErrorAplicacion('No puedes pagar una cita de otro paciente', 'NO_AUTORIZADO');
     }
-    if (cita.estado !== 'PENDIENTE_PAGO') {
+    if (!['PENDIENTE_PAGO','TEMPORAL'].includes(cita.estado)) {
       throw new ErrorAplicacion('La cita no está pendiente de pago', 'ESTADO_INVALIDO');
+    }
+    if (cita.expiraEn && cita.expiraEn.getTime() <= Date.now()) {
+      throw new ErrorAplicacion('La reserva venció. Debes elegir otro horario.', 'RESERVA_VENCIDA');
     }
 
     const pago = await this.pagoRepositorio.buscarPorCitaId(citaId);
@@ -39,12 +44,15 @@ export class PagarCitaCasoUso implements PagarCitaPuerto {
     if (!respuesta.aprobado) {
       throw new ErrorAplicacion(respuesta.mensaje, 'PAGO_RECHAZADO');
     }
+    if(cita.expiraEn&&cita.expiraEn.getTime()<=Date.now())throw new ErrorAplicacion('La reserva venció mientras se verificaba el pago simulado. Elige otro horario.','RESERVA_VENCIDA');
 
     pago.aprobar(respuesta.referencia);
     cita.confirmar(pago.id);
 
     await this.pagoRepositorio.actualizar(pago);
     await this.citaRepositorio.actualizar(cita);
+
+    await this.emitirBoleta.emitirBoleta(pago.id, cita.id);
 
     return { cita, pago };
   }

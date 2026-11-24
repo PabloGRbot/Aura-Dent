@@ -1,4 +1,5 @@
-import { Pool } from 'pg';
+import { Pool, PoolClient } from 'pg';
+import { parametrosListado,contextoOperacion } from './contexto_operacion';
 import { Rol, Usuario } from '../../../../dominio/modelos/usuario';
 import { UsuarioRepositorioPuerto } from '../../../../dominio/puertos/salida/usuario_repositorio_puerto';
 
@@ -16,7 +17,7 @@ interface UsuarioFila {
 }
 
 export class UsuarioPostgresRepositorio implements UsuarioRepositorioPuerto {
-  constructor(private readonly pool: Pool) {}
+  constructor(private readonly pool: Pool | PoolClient) {}
 
   async buscarPorId(id: string): Promise<Usuario | null> {
     const { rows } = await this.pool.query<UsuarioFila>(
@@ -28,7 +29,7 @@ export class UsuarioPostgresRepositorio implements UsuarioRepositorioPuerto {
 
   async buscarPorEmail(email: string): Promise<Usuario | null> {
     const { rows } = await this.pool.query<UsuarioFila>(
-      'SELECT * FROM usuarios WHERE email = $1 LIMIT 1',
+      'SELECT * FROM usuarios WHERE email = $1 AND activo LIMIT 1',
       [email]
     );
     return rows.length > 0 ? this.aDominio(rows[0]) : null;
@@ -36,15 +37,18 @@ export class UsuarioPostgresRepositorio implements UsuarioRepositorioPuerto {
 
   async listar(): Promise<Usuario[]> {
     const { rows } = await this.pool.query<UsuarioFila>(
-      'SELECT * FROM usuarios ORDER BY rol, apellidos, nombres'
+      `SELECT * FROM usuarios WHERE activo AND (nombres||' '||apellidos||' '||dni_ce||' '||email) ILIKE $3
+       ORDER BY rol,apellidos,nombres,id LIMIT $1 OFFSET $2`,[...parametrosListado()]
     );
     return rows.map((fila) => this.aDominio(fila));
   }
 
   async listarPorRol(rol: Rol): Promise<Usuario[]> {
     const { rows } = await this.pool.query<UsuarioFila>(
-      'SELECT * FROM usuarios WHERE rol = $1 ORDER BY apellidos, nombres',
-      [rol]
+      `SELECT * FROM usuarios WHERE rol=$1 AND activo AND (nombres||' '||apellidos||' '||dni_ce||' '||email) ILIKE $4
+       AND ($5::uuid IS NULL OR odontologo_asignado_id=$5)
+       ORDER BY apellidos,nombres,id LIMIT $2 OFFSET $3`,
+      [rol,...parametrosListado(),contextoOperacion.getStore()?.odontologoFiltro ?? null]
     );
     return rows.map((fila) => this.aDominio(fila));
   }
@@ -91,13 +95,14 @@ export class UsuarioPostgresRepositorio implements UsuarioRepositorioPuerto {
   }
 
   async eliminar(id: string): Promise<void> {
-    await this.pool.query('DELETE FROM usuarios WHERE id = $1', [id]);
+    await this.pool.query('UPDATE usuarios SET activo=false WHERE id = $1', [id]);
   }
 
   async listarPacientesPorOdontologo(odontologoId: string): Promise<Usuario[]> {
     const { rows } = await this.pool.query<UsuarioFila>(
-      `SELECT * FROM usuarios WHERE rol = 'Paciente' AND odontologo_asignado_id = $1 ORDER BY apellidos, nombres`,
-      [odontologoId]
+      `SELECT * FROM usuarios WHERE activo AND rol='Paciente' AND odontologo_asignado_id=$1
+       AND (nombres||' '||apellidos||' '||dni_ce) ILIKE $4 ORDER BY apellidos,nombres,id LIMIT $2 OFFSET $3`,
+      [odontologoId,...parametrosListado()]
     );
     return rows.map((fila) => this.aDominio(fila));
   }

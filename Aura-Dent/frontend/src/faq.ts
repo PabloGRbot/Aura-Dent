@@ -51,7 +51,7 @@ export const FAQ: EntradaFaq[] = [
     claves: ['cancelar', 'reprogramar', 'cambiar', 'anular', 'mover'],
     pregunta: '¿Puedo cancelar o reprogramar mi cita?',
     respuesta:
-      'Sí. Puedes cancelar o reprogramar desde la sección "Mis citas" hasta 24 horas antes. Si la cita no se confirma con el adelanto en 15 minutos, el cupo se libera automáticamente.'
+      'Puedes cambiar la cita durante el día del primer pago, hasta las 23:59 de Lima y antes del inicio. Puedes cancelar y solicitar devolución del adelanto durante ese mismo día o con al menos 48 horas exactas de anticipación. Para citas de mañana, el beneficio puede terminar hoy. Fuera del plazo o por inasistencia se pierde el adelanto. Se recoge en el consultorio. Cambiar la cita no renueva los plazos. Sin pago, la reserva vence a los 15 minutos y se conserva en el historial. Los pagos son simulados.'
   },
   {
     claves: ['odontologo', 'doctor', 'doctores', 'dentista', 'especialista', 'personal'],

@@ -2,6 +2,7 @@ import { ReactNode } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { useAutenticacion } from '../contexto/ContextoAutenticacion';
 import { MENU_POR_ROL, NOMBRE_ROL, RUTA_INICIO_POR_ROL } from '../navegacion';
+import { MenuDesplegable } from './MenuDesplegable';
 
 export function Layout({ children }: { children: ReactNode }) {
   const { usuario, cerrarSesion } = useAutenticacion();
@@ -22,11 +23,15 @@ export function Layout({ children }: { children: ReactNode }) {
         </Link>
         {usuario && (
           <nav className="menu">
-            {MENU_POR_ROL[usuario.rol].map((opcion) => (
-              <NavLink key={opcion.ruta} to={opcion.ruta} end className="menu-enlace">
-                {opcion.etiqueta}
-              </NavLink>
-            ))}
+            {MENU_POR_ROL[usuario.rol].map((opcion) =>
+              opcion.hijos ? (
+                <MenuDesplegable key={opcion.etiqueta} opcion={opcion} />
+              ) : (
+                <NavLink key={opcion.ruta} to={opcion.ruta ?? '#'} end className="menu-enlace">
+                  {opcion.etiqueta}
+                </NavLink>
+              )
+            )}
           </nav>
         )}
       </aside>

@@ -1,8 +1,8 @@
 import { CitaAgenda, NotaClinica, NotaClinicaDetalle } from '../tipos';
 import { peticion } from './cliente';
 
-export function obtenerAgenda(): Promise<CitaAgenda[]> {
-  return peticion<CitaAgenda[]>('/api/citas/agenda');
+export function obtenerAgenda(pagina=1): Promise<CitaAgenda[]> {
+  return peticion<CitaAgenda[]>(`/api/citas/agenda?pagina=${pagina}`);
 }
 
 export function asignarCita(citaId: string): Promise<void> {
@@ -20,8 +20,8 @@ export function crearNota(citaId: string, contenido: string): Promise<NotaClinic
   });
 }
 
-export function obtenerMisNotas(): Promise<NotaClinicaDetalle[]> {
-  return peticion<NotaClinicaDetalle[]>('/api/citas/notas');
+export function obtenerMisNotas(pagina=1): Promise<NotaClinicaDetalle[]> {
+  return peticion<NotaClinicaDetalle[]>(`/api/citas/notas?pagina=${pagina}`);
 }
 
 export function eliminarNota(notaId: string): Promise<void> {

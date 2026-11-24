@@ -10,6 +10,7 @@ export interface DatosRegistro {
   fechaNacimiento?: string | null;
   alergias?: string | null;
   aceptaTerminos: boolean;
+  versionPolitica:string;
 }
 
 export function login(email: string, password: string): Promise<SesionAutenticacion> {

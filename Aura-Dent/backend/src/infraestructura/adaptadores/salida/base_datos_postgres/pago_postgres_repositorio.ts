@@ -1,4 +1,6 @@
-import { Pool } from 'pg';
+import { Pool, PoolClient } from 'pg';
+import { conTransaccion, parametrosListado } from './contexto_operacion';
+import { ErrorAplicacion } from '../../../../compartido/error_aplicacion';
 import { EstadoCita } from '../../../../dominio/modelos/cita_medica';
 import { EstadoPago, MetodoPago, Pago, TipoPago } from '../../../../dominio/modelos/pago';
 import {
@@ -27,10 +29,10 @@ interface PagoDetalleFila extends PagoFila {
 }
 
 export class PagoPostgresRepositorio implements PagoRepositorioPuerto {
-  constructor(private readonly pool: Pool) {}
+  constructor(private readonly pool: Pool, private readonly cliente?: PoolClient) {}
 
   async buscarPorId(id: string): Promise<Pago | null> {
-    const { rows } = await this.pool.query<PagoFila>(
+    const { rows } = await (this.cliente ?? this.pool).query<PagoFila>(
       'SELECT * FROM pagos WHERE id = $1 LIMIT 1',
       [id]
     );
@@ -38,23 +40,23 @@ export class PagoPostgresRepositorio implements PagoRepositorioPuerto {
   }
 
   async buscarPorCitaId(citaId: string): Promise<Pago | null> {
-    const { rows } = await this.pool.query<PagoFila>(
-      'SELECT * FROM pagos WHERE cita_id = $1 LIMIT 1',
+    const { rows } = await (this.cliente ?? this.pool).query<PagoFila>(
+      "SELECT * FROM pagos WHERE cita_id=$1 ORDER BY (tipo='ADELANTO') DESC,(estado='PENDIENTE') DESC,pagado_en ASC NULLS LAST,id LIMIT 1",
       [citaId]
     );
     return rows.length > 0 ? this.aDominio(rows[0]) : null;
   }
 
   async buscarPagosPorCitaId(citaId: string): Promise<Pago[]> {
-    const { rows } = await this.pool.query<PagoFila>(
-      'SELECT * FROM pagos WHERE cita_id = $1 ORDER BY pagado_en ASC NULLS FIRST, creado_en ASC',
+    const { rows } = await (this.cliente ?? this.pool).query<PagoFila>(
+      'SELECT * FROM pagos WHERE cita_id = $1 ORDER BY pagado_en ASC NULLS FIRST, id ASC',
       [citaId]
     );
     return rows.map((fila) => this.aDominio(fila));
   }
 
   async listar(): Promise<PagoDetalle[]> {
-    const { rows } = await this.pool.query<PagoDetalleFila>(
+    const { rows } = await (this.cliente ?? this.pool).query<PagoDetalleFila>(
       `SELECT p.*,
               c.fecha AS fecha_cita, c.servicio, c.estado AS estado_cita,
               u.nombres || ' ' || u.apellidos AS paciente_nombre,
@@ -62,7 +64,8 @@ export class PagoPostgresRepositorio implements PagoRepositorioPuerto {
         FROM pagos p
         JOIN citas c ON c.id = p.cita_id
         JOIN usuarios u ON u.id = c.paciente_id
-        ORDER BY c.fecha DESC`
+        WHERE (u.nombres||' '||u.apellidos||' '||u.dni_ce) ILIKE $3
+        ORDER BY c.fecha DESC,p.id DESC LIMIT $1 OFFSET $2`,[...parametrosListado()]
     );
     return rows.map((fila) => ({
       pago: this.aDominio(fila),
@@ -75,7 +78,8 @@ export class PagoPostgresRepositorio implements PagoRepositorioPuerto {
   }
 
   async guardar(pago: Pago): Promise<void> {
-    await this.pool.query(
+    if(!this.cliente) return conTransaccion(this.pool,c=>new PagoPostgresRepositorio(this.pool,c).guardar(pago));
+    await (this.cliente ?? this.pool).query(
       `INSERT INTO pagos (id, cita_id, monto, estado, moneda, metodo, tipo, referencia_qr, pagado_en)
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
       [
@@ -93,12 +97,15 @@ export class PagoPostgresRepositorio implements PagoRepositorioPuerto {
   }
 
   async actualizar(pago: Pago): Promise<void> {
-    await this.pool.query(
-      'UPDATE pagos SET monto = $1, estado = $2, referencia_qr = $3, pagado_en = $4 WHERE id = $5',
-      [pago.monto, pago.estado, pago.referenciaQr, pago.pagadoEn, pago.id]
+    if(!this.cliente) return conTransaccion(this.pool,c=>new PagoPostgresRepositorio(this.pool,c).actualizar(pago));
+    const resultado = await (this.cliente ?? this.pool).query(
+      'UPDATE pagos SET monto=$1,estado=$2,referencia_qr=$3,pagado_en=$4,metodo=$6,tipo=$7 WHERE id=$5',
+      [pago.monto, pago.estado, pago.referenciaQr, pago.pagadoEn, pago.id,pago.metodo,pago.tipo]
     );
+    if (!resultado.rowCount) throw new ErrorAplicacion('El pago ya no existe.', 'PAGO_NO_ENCONTRADO');
   }
 
+  desdeFilaOpcional(fila?: PagoFila): Pago | null { return fila ? this.aDominio(fila) : null; }
   private aDominio(fila: PagoFila): Pago {
     return new Pago(
       fila.id,

@@ -3,8 +3,10 @@ import { asignarCita, crearNota, obtenerAgenda, obtenerNotasCita } from '../../a
 import { useAutenticacion } from '../../contexto/ContextoAutenticacion';
 import { ETIQUETA_ESTADO, formatearFecha } from '../../formato';
 import { CitaAgenda, NotaClinica } from '../../tipos';
+import { Paginador } from '../../componentes/Paginador';
 
 export function MiAgenda() {
+  const [pagina,setPagina]=useState(1);
   const { usuario } = useAutenticacion();
   const [agenda, setAgenda] = useState<CitaAgenda[]>([]);
   const [cargando, setCargando] = useState(true);
@@ -17,13 +19,13 @@ export function MiAgenda() {
 
   const cargar = useCallback(async () => {
     try {
-      setAgenda(await obtenerAgenda());
+      setAgenda(await obtenerAgenda(pagina));
     } catch (e) {
       setError((e as Error).message);
     } finally {
       setCargando(false);
     }
-  }, []);
+  }, [pagina]);
 
   useEffect(() => {
     cargar();
@@ -214,6 +216,7 @@ export function MiAgenda() {
           </div>
         </div>
       )}
+      <Paginador pagina={pagina} cantidad={agenda.length} onCambiar={setPagina}/>
     </section>
   );
 }

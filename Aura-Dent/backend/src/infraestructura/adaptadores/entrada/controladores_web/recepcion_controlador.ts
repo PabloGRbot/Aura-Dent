@@ -2,6 +2,7 @@ import { Request, RequestHandler, Response, Router } from 'express';
 import { Pago } from '../../../../dominio/modelos/pago';
 import { Usuario } from '../../../../dominio/modelos/usuario';
 import { CitaMedica } from '../../../../dominio/modelos/cita_medica';
+import { accionesCita } from '../../../../dominio/servicios/politica_citas';
 import { MetodoPago, TipoPago } from '../../../../dominio/modelos/pago';
 import {
   ConfirmarPagoPuerto,
@@ -39,7 +40,8 @@ function aCitaDto(item: CitaAgendaItem) {
     fecha: item.cita.fecha,
     duracionMinutos: item.cita.duracionMinutos,
     servicio: item.cita.servicio,
-    estado: item.cita.estado
+    estado: accionesCita(item.cita).estadoEfectivo,
+    acciones:accionesCita(item.cita)
   };
 }
 
@@ -64,6 +66,7 @@ function aPagoDto(pago: Pago) {
     monto: pago.monto,
     estado: pago.estado,
     moneda: pago.moneda,
+    metodo:pago.metodo,tipo:pago.tipo,pagadoEn:pago.pagadoEn,
     referenciaQr: pago.referenciaQr
   };
 }
@@ -87,6 +90,14 @@ function aOdontologoDto(usuario: Usuario) {
   };
 }
 
+function aFechaInput(fecha: Date | null): string | null {
+  if (!fecha) return null;
+  const anio = fecha.getFullYear();
+  const mes = String(fecha.getMonth() + 1).padStart(2, '0');
+  const dia = String(fecha.getDate()).padStart(2, '0');
+  return `${anio}-${mes}-${dia}`;
+}
+
 function aPacienteDto(usuario: Usuario) {
   return {
     id: usuario.id,
@@ -94,6 +105,8 @@ function aPacienteDto(usuario: Usuario) {
     apellidos: usuario.apellidos,
     email: usuario.email,
     dniCe: usuario.dniCe,
+    fechaNacimiento: aFechaInput(usuario.fechaNacimiento),
+    alergias: usuario.alergias,
     rol: usuario.rol,
     odontologoAsignadoId: usuario.odontologoAsignadoId
   };
@@ -105,6 +118,7 @@ const ESTADOS_ERROR: Record<string, number> = {
   PACIENTE_NO_ENCONTRADO: 404,
   USUARIO_EN_USO: 409,
   EMAIL_DUPLICADO: 409
+  ,POLITICA_PENDIENTE:409,ESTADO_INVALIDO:409,RESERVA_VENCIDA:410
 };
 
 const ES_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -142,8 +156,8 @@ export function crearRecepcionControlador(
 
   router.get('/recepcion/pacientes', async (_req: Request, res: Response) => {
     try {
-      const usuarios = await listarUsuarios.listar();
-      res.json(usuarios.filter((u) => u.rol === 'Paciente').map(aPacienteDto));
+      const usuarios = await listarUsuariosPorRol.listarPorRol('Paciente');
+      res.json(usuarios.map(aPacienteDto));
     } catch (error) {
       responderError(res, error);
     }

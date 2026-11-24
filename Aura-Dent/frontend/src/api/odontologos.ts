@@ -6,6 +6,6 @@ export interface Odontologo {
   apellidos: string;
 }
 
-export function listarOdontologos(): Promise<Odontologo[]> {
-  return peticion<Odontologo[]>('/api/odontologos');
+export function listarOdontologos(q=''): Promise<Odontologo[]> {
+  return peticion<Odontologo[]>(`/api/odontologos?q=${encodeURIComponent(q)}`);
 }

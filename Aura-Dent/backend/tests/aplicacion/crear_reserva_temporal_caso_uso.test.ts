@@ -36,6 +36,10 @@ class CitaRepositorioFalso implements CitaRepositorioPuerto {
       this.citas[indice] = cita;
     }
   }
+
+  async eliminarPendientesVencidas(): Promise<number> {
+    return 0;
+  }
 }
 
 class GeneradorIdFalso implements GeneradorId {
@@ -61,6 +65,8 @@ describe('CrearReservaTemporalCasoUso', () => {
     });
 
     expect(reserva.reservaId).toBe('reserva-1');
+    expect(reserva.expiraEn.getTime()).toBeGreaterThan(Date.now() + 14 * 60 * 1000);
+    expect(reserva.expiraEn.getTime()).toBeLessThan(Date.now() + 16 * 60 * 1000);
     await expect(repositorio.buscarPorId('reserva-1')).resolves.not.toBeNull();
   });
 });

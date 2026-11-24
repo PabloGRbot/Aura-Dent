@@ -28,11 +28,16 @@ CREATE TABLE IF NOT EXISTS citas (
   duracion_minutos INTEGER NOT NULL,
   servicio VARCHAR(100),
   estado VARCHAR(30) NOT NULL,
-  pago_id UUID
+  pago_id UUID,
+  expira_en TIMESTAMPTZ
 );
 
 ALTER TABLE citas ALTER COLUMN odontologo_id DROP NOT NULL;
 ALTER TABLE citas ADD COLUMN IF NOT EXISTS servicio VARCHAR(100);
+ALTER TABLE citas ADD COLUMN IF NOT EXISTS expira_en TIMESTAMPTZ;
+CREATE INDEX IF NOT EXISTS idx_citas_expiracion ON citas (expira_en) WHERE estado IN ('TEMPORAL', 'PENDIENTE_PAGO');
+CREATE INDEX IF NOT EXISTS idx_citas_paciente_estado ON citas (paciente_id, estado);
+CREATE INDEX IF NOT EXISTS idx_citas_odontologo_fecha ON citas (odontologo_id, fecha);
 
 CREATE TABLE IF NOT EXISTS pagos (
   id UUID PRIMARY KEY,
@@ -48,6 +53,7 @@ CREATE TABLE IF NOT EXISTS pagos (
 ALTER TABLE pagos ADD COLUMN IF NOT EXISTS metodo VARCHAR(20) NOT NULL DEFAULT 'QR';
 ALTER TABLE pagos ADD COLUMN IF NOT EXISTS tipo VARCHAR(20) NOT NULL DEFAULT 'UNICO';
 ALTER TABLE pagos ADD COLUMN IF NOT EXISTS pagado_en TIMESTAMPTZ;
+CREATE INDEX IF NOT EXISTS idx_pagos_estado ON pagos (estado);
 
 CREATE TABLE IF NOT EXISTS configuracion (
   clave VARCHAR(60) PRIMARY KEY,
@@ -420,8 +426,8 @@ async function principal(): Promise<void> {
 
     for (const c of citasDemo) {
       await pool.query(
-        `INSERT INTO citas (id, paciente_id, odontologo_id, fecha, duracion_minutos, servicio, estado, pago_id)
-          VALUES ($1, $2, $3, $4, $5, $6, $7, NULL)
+        `INSERT INTO citas (id, paciente_id, odontologo_id, fecha, duracion_minutos, servicio, estado, pago_id, expira_en)
+          VALUES ($1, $2, $3, $4, $5, $6, $7, NULL, NULL)
           ON CONFLICT (id) DO NOTHING`,
         [c.id, c.pacienteId, c.odontologoId, c.fecha, c.duracionMinutos, c.servicio, c.estado]
       );

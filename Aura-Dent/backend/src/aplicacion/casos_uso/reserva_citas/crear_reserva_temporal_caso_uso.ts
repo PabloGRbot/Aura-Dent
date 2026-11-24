@@ -28,19 +28,23 @@ export class CrearReservaTemporalCasoUso implements CrearReservaTemporalPuerto {
     this.validacionReserva.validarDisponibilidad(existeConflicto);
 
     const reservaId = this.generadorId.generar();
+    const expiraEn = new Date(Date.now() + DURACION_RESERVA_TEMPORAL_MS);
     const cita = new CitaMedica(
       reservaId,
       solicitud.pacienteId,
       solicitud.odontologoId,
       solicitud.fecha,
       solicitud.duracionMinutos,
-      'TEMPORAL'
+      'TEMPORAL',
+      null,
+      null,
+      expiraEn
     );
     await this.citaRepositorio.guardar(cita);
 
     return {
       reservaId,
-      expiraEn: new Date(Date.now() + DURACION_RESERVA_TEMPORAL_MS),
+      expiraEn,
       monto: 0
     };
   }

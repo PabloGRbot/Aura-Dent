@@ -1,4 +1,5 @@
 import { FormEvent, useState } from 'react';
+import { FechaFormulario } from '../componentes/FechaFormulario';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { registrar } from '../api/autenticacion';
 import { ModalTerminos } from '../componentes/ModalTerminos';
@@ -35,6 +36,7 @@ export function Registro() {
   const [enviando, setEnviando] = useState(false);
   const [aceptaTerminos, setAceptaTerminos] = useState(false);
   const [verTerminos, setVerTerminos] = useState(false);
+  const [versionPolitica,setVersionPolitica]=useState('');
 
   function actualizarCampo(campo: keyof FormularioRegistro, valor: string) {
     setForm((previo) => ({ ...previo, [campo]: valor }));
@@ -76,7 +78,8 @@ export function Registro() {
         dniCe: form.dniCe,
         fechaNacimiento: form.fechaNacimiento || null,
         alergias: form.alergias || null,
-        aceptaTerminos: true
+        aceptaTerminos: true,
+        versionPolitica
       });
       iniciarSesion(sesion.token, sesion.usuario);
       navegar(RUTA_RESERVA_PACIENTE, { replace: true });
@@ -137,8 +140,7 @@ export function Registro() {
           </label>
           <label>
             Fecha de nacimiento
-            <input
-              type="date"
+            <FechaFormulario
               value={form.fechaNacimiento}
               onChange={(e) => actualizarCampo('fechaNacimiento', e.target.value)}
             />
@@ -187,10 +189,11 @@ export function Registro() {
             Términos y Condiciones
           </button>
         </div>
+        <PoliticaCitas onCargada={setVersionPolitica}/>
 
         {error && <p className="error">{error}</p>}
 
-        <button type="submit" disabled={enviando}>
+        <button type="submit" disabled={enviando||!versionPolitica}>
           {enviando ? 'Creando cuenta...' : 'Registrarme'}
         </button>
         <Link className="enlace-centrado" to="/login">
@@ -212,3 +215,4 @@ export function Registro() {
     </main>
   );
 }
+import { PoliticaCitas } from '../componentes/PoliticaCitas';

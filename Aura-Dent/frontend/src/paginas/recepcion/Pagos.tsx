@@ -1,4 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
+import { Selector } from '../../componentes/Selector';
+import { Devoluciones } from '../../componentes/Devoluciones';
+import { Paginador } from '../../componentes/Paginador';
 import {
   confirmarPagoRecepcion,
   listarPagosRecepcion,
@@ -20,6 +23,7 @@ const METODOS: { valor: MetodoPago; etiqueta: string }[] = [
 ];
 
 export function PagosRecepcion() {
+  const [pagina,setPagina]=useState(1);
   const [pagos, setPagos] = useState<PagoDetalle[]>([]);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -39,13 +43,13 @@ export function PagosRecepcion() {
 
   const cargar = useCallback(async () => {
     try {
-      setPagos(await listarPagosRecepcion());
+      setPagos(await listarPagosRecepcion(pagina));
     } catch (e) {
       setError((e as Error).message);
     } finally {
       setCargando(false);
     }
-  }, []);
+  }, [pagina]);
 
   const cargarCitas = useCallback(async () => {
     try {
@@ -136,11 +140,11 @@ export function PagosRecepcion() {
         <div className="tarjetas">
           <article className="tarjeta-accion tarjeta-dato">
             <h3>{pagos.length}</h3>
-            <p>Pagos registrados</p>
+            <p>Pagos en esta página</p>
           </article>
           <article className="tarjeta-accion tarjeta-dato">
             <h3>{pendientes}</h3>
-            <p>Pendientes de verificar</p>
+            <p>Pendientes en esta página</p>
           </article>
         </div>
       )}
@@ -228,7 +232,7 @@ export function PagosRecepcion() {
             <div className="form-grid">
               <label>
                 Cita
-                <select
+                <Selector
                   value={cobroForm.citaId}
                   onChange={(e) => setCobroForm((prev) => ({ ...prev, citaId: e.target.value}))}
                   required
@@ -239,7 +243,7 @@ export function PagosRecepcion() {
                       {cita.pacienteNombre} - {formatearFechaCorta(cita.fecha)} - {cita.servicio ?? 'Consulta'}
                     </option>
                   ))}
-                </select>
+                </Selector>
               </label>
               <label>
                 Monto (S/)
@@ -254,7 +258,7 @@ export function PagosRecepcion() {
               </label>
               <label>
                 Método de pago
-                <select
+                <Selector
                   value={cobroForm.metodo}
                   onChange={(e) => setCobroForm((prev) => ({ ...prev, metodo: e.target.value as MetodoPago }))}
                 >
@@ -263,7 +267,7 @@ export function PagosRecepcion() {
                       {m.etiqueta}
                     </option>
                   ))}
-                </select>
+                </Selector>
               </label>
             </div>
             <div className="modal-acciones">
@@ -277,6 +281,8 @@ export function PagosRecepcion() {
           </form>
         </div>
       )}
+      <Paginador pagina={pagina} cantidad={pagos.length} onCambiar={setPagina}/>
+      <Devoluciones personal/>
     </section>
   );
 }
